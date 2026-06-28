@@ -1,0 +1,1649 @@
+/* ============================================================
+   HTML5 + CSS3 É UMA LINGUAGEM DE PROGRAMAÇÃO — folha de estilo
+   Toda a lógica (decisão, loop, booleana, aritmética, Rule 110)
+   é executada AQUI. Zero JavaScript.
+   ============================================================ */
+
+/* ---------- Variáveis tipadas (Seção 01) ---------- */
+:root {
+  --bg:        #0a0e14;
+  --bg-soft:   #111722;
+  --panel:     #0e1622;
+  --line:      #1e2a3a;
+  --txt:       #c7d2e0;
+  --txt-dim:   #7c8aa0;
+  --accent:    #5eead4;   /* teal  */
+  --accent2:   #818cf8;   /* indigo*/
+  --on:        #34d399;   /* verde aceso */
+  --off:       #1b2535;   /* apagado */
+  --danger:    #f87171;
+
+  /* Surface scale — fundos para controles/elementos elevados.
+     Consolida 22+ literais que apareciam idênticos em vários módulos
+     (keypads, botões reset, color-mix em maze/rpn/ttt). Trocar o tema
+     do shell de botões agora é mudar uma linha. */
+  --surface-1:   #0c1320;   /* botões/controles base (11 usos) */
+  --surface-2:   #05080d;   /* inset/cell deep (4 usos) */
+  --surface-dim: #161d29;   /* indicador apagado (semáforo, 4 usos) */
+  --on-bright:   #07120f;   /* texto/fg sobre fundo aceso (3 usos) */
+
+  /* Tokens das lâmpadas (gates booleanas, full-adder, células do Rule 110).
+     Centralizar aqui evita que 30+ regras repitam as mesmas cores e brilhos —
+     mudar o tema da página é trocar estas variáveis. */
+  --lamp-border-off: #243049;
+  --glow-on:    0 0 18px rgba( 52, 211, 153, .7);   /* verde — gates/somador */
+  --glow-ca:    0 0 14px rgba( 94, 234, 212, .6);   /* ciano — saída do Rule 110 */
+  --glow-seed:  0 0 14px rgba(129, 140, 248, .6);   /* índigo — semente do Rule 110 */
+
+  --base: 16;
+  --dobro: calc(var(--base) * 2);
+  --cor: var(--accent);
+
+  --mono: "SFMono-Regular", "Cascadia Code", Consolas, "Courier New", monospace;
+  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  /* Easing curves — semanticamente nomeadas para uso consistente.
+       --ease-emphasis : decelera no fim — reveals que devem chamar atenção
+                         (.calc-result-reveal, wizard fade-in)
+       --ease-natural  : ease-in-out simétrico — animação de vitória (ttt-win-pulse) */
+  --ease-emphasis:  cubic-bezier(.2, .8, .3, 1);
+  --ease-natural:   cubic-bezier(.65, 0, .35, 1);
+
+  /* Border-radius scale — escolha por elemento, preserva visual existente.
+     Cada valor preserva o uso original; a tokenização permite refactor global. */
+  --r-xs:     4px;     /* chips/tags pequenos */
+  --r-sm:     6px;     /* checkboxes, task box */
+  --r-md:     8px;     /* tabs, inputs, mode-btns */
+  --r-lg:     10px;    /* botões padrão, calc keys */
+  --r-xl:     12px;    /* code blocks, controls grandes */
+  --r-2xl:    14px;    /* containers médios (.ca, .logic-lab) */
+  --r-3xl:    20px;    /* painéis top-level (.proj-panel, .calc) */
+  --r-circle: 50%;     /* círculos (pomo-btn, lâmpadas) */
+  --r-pill:   999px;   /* pills (filter tabs, badges) */
+
+  /* Type scale — só valores frequentes (3+ usos) viram token.
+     Valores raros mantidos hardcoded preservam intent local.
+     Ratio entre tokens ~1.1-1.15 para harmonia tipográfica. */
+  --text-xs:   .72rem;   /* labels muito pequenas */
+  --text-sm:   .8rem;    /* small body, badges */
+  --text-base: .85rem;   /* small hints, footer */
+  --text-md:   .9rem;    /* body */
+  --text-lg:   1rem;     /* emphasis body */
+  --text-xl:   1.1rem;   /* lead em apps */
+  --text-2xl:  1.6rem;   /* register displays */
+
+  /* Duration scale — semantic timing.
+       --dur-tap     : feedback de press (scale :active)
+       --dur-fast    : color/border subtle
+       --dur-quick   : hover defaults
+       --dur-base    : opacity/reveal padrão
+       --dur-slow    : fade/strike maiores
+       --dur-emphasis: line-through, expand max-height */
+  --dur-tap:      .08s;
+  --dur-fast:     .12s;
+  --dur-quick:    .15s;
+  --dur-base:     .2s;
+  --dur-slow:     .25s;
+  --dur-emphasis: .35s;
+
+  /* Animation duration scale — para keyframes de uso reutilizado.
+     Animations únicas (timer 1500s, semáforo 9s) ficam inline. */
+  --anim-pulse: 1.1s;  /* TTT win pulse, generic celebration */
+
+  /* Elevation scale — sombras para hierarquia de depth.
+       --elev-card  : painéis flutuantes top-level (5 usos: .todo, .calc, .bit4, .bf, .maze)
+       --elev-soft  : hover/focus suave em controles (.btn-step, .pomo-btn, .wiz-btn--next, etc.) */
+  --elev-card:  0 24px 70px rgba(0, 0, 0, .4);
+  --elev-soft:  0 0 12px color-mix(in oklch, var(--accent) 20%, transparent);
+
+  /* Spacing scale — rhythm modular 4px ancorado em valores reais do projeto.
+     Cobre ~75% dos paddings/margins/gaps. Conversão tolera ≤0.8px de drift
+     (imperceptível). Valores fora desta escala (.4rem, .6rem, .9rem, 1.1rem,
+     1.4rem, 1.6rem) permanecem hard-coded — são micro-tunings intencionais
+     para layouts apertados onde o snap à escala distorceria proporções. */
+  --space-3xs:  .25rem;   /*  4px — gaps mínimos */
+  --space-xs:   .5rem;    /*  8px — pequeno gap */
+  --space-sm:   .75rem;   /* 12px — gap padrão pequeno */
+  --space-md:   1rem;     /* 16px — gap padrão (anchor) */
+  --space-lg:   1.25rem;  /* 20px — gap confortável */
+  --space-xl:   1.5rem;   /* 24px — separação de seções */
+  --space-2xl:  2rem;     /* 32px — padding top-level */
+  --space-3xl:  2.5rem;   /* 40px — container generoso */
+}
+
+/* ---------- Funções nativas (Seção 02) — Chrome 139+ ---------- */
+@function --dobrar(--v) {
+  result: calc(var(--v) * 2);
+}
+@function --clarear(--c <color>, --n <number>: 0.22) returns <color> {
+  result: oklch(from var(--c) calc(l + var(--n)) c h);
+}
+
+/* ---------- Reset / base ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ---------- Sistema de ícones (SVG inline stroke-based) ----------
+   Estilo único em todo o projeto: viewBox 24×24, traço 1.75, currentColor,
+   linecap/linejoin round. Tamanho via font-size do contexto (1em scale).
+   Alinhamento via vertical-align ajustado para sentar na linha de texto.
+   Sem dependência externa — paths embutidos no HTML. */
+.icon {
+  display: inline-block;
+  width:  1em;
+  height: 1em;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -.15em;
+  flex-shrink: 0;
+  overflow: visible;
+}
+/* Variantes — em contextos onde o ícone ocupa "área" e não acompanha texto */
+.icon--lg  { width: 1.6em; height: 1.6em; vertical-align: -.3em; }
+.icon--xl  { width: 2.4em; height: 2.4em; vertical-align: middle; }
+/* Stroke mais fino quando o ícone é grande e o traço de 1.75 fica "pesado".
+   (i-play e i-pause têm fill="currentColor" explícito no symbol — auto-contidos
+   sem precisar de variante .icon--solid.) */
+.icon--lg, .icon--xl { stroke-width: 1.5; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--txt);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+code {
+  font-family: var(--mono);
+  background: var(--surface-1);
+  color: var(--accent);
+  padding: .1em .4em;
+  border-radius: var(--r-xs);
+  font-size: .9em;
+}
+
+/* visualmente oculto mas acessível (os inputs de estado).
+   Mantém o controle no fluxo de foco do teclado; o realce de foco é
+   aplicado no rótulo visível correspondente (ver bloco de foco abaixo). */
+.sr {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+  pointer-events: none;
+}
+
+/* ---- Foco de teclado visível ----------------------------------------
+   Os inputs reais são ocultos; quando recebem foco via teclado,
+   destacamos o rótulo visível associado. Foco das teclas de dígito é
+   definido em calc-table.css (uma regra por slot×valor). */
+#nav-demos:focus-visible     ~ .topnav label[for="nav-demos"],
+#nav-projects:focus-visible  ~ .topnav label[for="nav-projects"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+a:focus-visible,
+button:focus-visible,
+.navtab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* ============================================================
+   RESPONSIVE — telas muito pequenas (<480px)
+   Ajustes finos para preservar legibilidade e usabilidade em phones.
+   ============================================================ */
+@media (max-width: 480px) {
+  .app-wrap { padding-left: var(--space-sm); padding-right: var(--space-sm); }
+  /* Pomodoro: ring um pouco menor em phones — preserva relação com viewport. */
+  .timer-ring-container { width: 170px; height: 170px; }
+  .min-span .min-num { font-size: 2.4rem; }
+  /* Topnav: compactar */
+  .topnav { padding: var(--space-xs) var(--space-sm); gap: .35rem; }
+  .navtab { padding: .4rem var(--space-sm); font-size: var(--text-sm); }
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: clamp(4rem, 12vh, 9rem) var(--space-xl) 5rem;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+.hero__glow {
+  position: absolute;
+  inset: -40% 0 auto 0;
+  height: 80%;
+  background:
+    radial-gradient(60% 60% at 50% 0%, color-mix(in oklch, var(--accent)  18%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 70% 10%, color-mix(in oklch, var(--accent2) 18%, transparent), transparent 70%);
+  filter: blur(10px);
+  animation: pulse 6s ease-in-out infinite;
+  z-index: 0;
+}
+.hero > *:not(.hero__glow) { position: relative; z-index: 1; }
+
+.kicker {
+  font-family: var(--mono);
+  letter-spacing: .25em;
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  color: var(--accent);
+  margin-bottom: var(--space-lg);
+}
+.hero h1 {
+  font-size: clamp(2.2rem, 6.5vw, 4.6rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+/* Gradiente do título: stop final em magenta (intencional, unique-use)
+   compõe os 2 tons da paleta + 1 acento de calor para evitar leitura "fria". */
+.grad {
+  background: linear-gradient(100deg, var(--accent), var(--accent2) 60%, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lead {
+  max-width: 60ch;
+  margin: 1.6rem auto 0;
+  color: var(--txt-dim);
+  font-size: clamp(1rem, 2vw, 1.18rem);
+}
+.lead strong { color: var(--txt); }
+
+.hero__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  justify-content: center;
+  margin: 2.2rem auto 0;
+  max-width: 640px;
+}
+.badge {
+  font-family: var(--mono);
+  font-size: .76rem;
+  padding: .35rem var(--space-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 5%, transparent);
+}
+
+/* CTAs do hero: scroll-cue para "A Prova" abaixo + atalho à aba de Aplicações.
+   Layout flex centrado, gap consistente. */
+.hero__ctas {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin-top: 2.6rem;
+}
+.scroll-cue {
+  display: inline-block;
+  color: var(--txt-dim);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  animation: bob 2s ease-in-out infinite;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--r-md);
+  transition: color var(--dur-quick);
+}
+.scroll-cue:hover { color: var(--accent); }
+
+/* Atalho direto para os 10 projetos (label aponta para nav-projects). */
+.cta-projects {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 8%, transparent);
+  border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--dur-quick), background var(--dur-quick),
+              transform var(--dur-tap), color var(--dur-quick);
+}
+.cta-projects:hover {
+  border-color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 18%, transparent);
+  color: var(--txt);
+}
+.cta-projects:active { transform: scale(.97); }
+
+/* ============================================================
+   BLOCOS / LAYOUT GERAL
+   ============================================================ */
+main { max-width: 1080px; margin: 0 auto; padding: 0 var(--space-lg); }
+
+.block { padding: 4.5rem 0; border-bottom: 1px solid var(--line); }
+.block__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-md);
+  margin-bottom: 1.1rem;
+}
+.num {
+  font-family: var(--mono);
+  font-size: var(--text-lg);
+  color: var(--accent2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: .15rem var(--space-xs);
+}
+.block h2 {
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  letter-spacing: -.01em;
+}
+.desc {
+  max-width: 70ch;
+  color: var(--txt-dim);
+  margin-bottom: var(--space-2xl);
+}
+.desc strong, .desc em { color: var(--txt); }
+.desc em { font-style: normal; color: var(--accent); }
+.hint {
+  font-size: var(--text-base);
+  color: var(--txt-dim);
+  margin-top: var(--space-md);
+  font-family: var(--mono);
+}
+
+.tag-new {
+  font-family: var(--mono);
+  font-size: .62rem;
+  vertical-align: middle;
+  background: linear-gradient(100deg, var(--accent), var(--accent2));
+  color: var(--on-bright);
+  padding: .15rem var(--space-xs);
+  border-radius: var(--r-pill);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* duo: código + demo lado a lado */
+.duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+  align-items: stretch;
+}
+.duo--gap { margin-top: var(--space-lg); }
+@media (max-width: 760px) { .duo { grid-template-columns: 1fr; } }
+
+.code {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  background: #070b12;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 1.1rem var(--space-lg);
+  overflow-x: auto;
+  white-space: pre;
+  color: #aeb9c9;
+}
+/* "syntax highlight" */
+.c-at  { color: #f0abfc; }
+.c-fn  { color: #5eead4; }
+.c-var { color: #fca5a5; }
+.c-sel { color: #93c5fd; }
+.c-str { color: #fcd34d; }
+.c-num { color: #fdba74; }
+.c-kw  { color: #c084fc; font-style: italic; }
+.c-cm  { color: #4b5b70; font-style: italic; }
+
+.demo {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+/* ---------- interruptor genérico ----------
+   .switch  é o trilho; ::before é a pista, ::after a bolinha. Os ids dos
+   checkboxes/radios ficam fora; o estado é projetado via ~ para o ::before
+   (cor da pista) e ::after (posição da bolinha). */
+.switch {
+  position: relative;                  /* ancora a bolinha (::after) */
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  cursor: pointer;
+  user-select: none;
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  padding: .6rem .9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--bg-soft);
+  transition: border-color var(--dur-base), background var(--dur-base);
+}
+.switch::before {                      /* pista */
+  content: "";
+  flex: none;
+  width: 38px; height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--off);
+  transition: background var(--dur-base);
+}
+.switch::after {                       /* bolinha */
+  content: "";
+  position: absolute;
+  left: .9rem; top: 50%;
+  width: 16px; height: 16px;
+  margin-top: -8px;
+  border-radius: var(--r-circle);
+  background: #6b7280;
+  transform: translateX(0);
+  transition: transform var(--dur-base), background var(--dur-base);
+  pointer-events: none;
+}
+
+/* estado ligado (cada seção liga via id correspondente) */
+#porta:checked ~ .switch::before,
+#gA:checked ~ .logic-inputs label[for="gA"]::before,
+#gB:checked ~ .logic-inputs label[for="gB"]::before,
+#fA:checked ~ .adder-inputs label[for="fA"]::before,
+#fB:checked ~ .adder-inputs label[for="fB"]::before,
+#fC:checked ~ .adder-inputs label[for="fC"]::before { background: var(--on); }
+
+#porta:checked ~ .switch::after,
+#gA:checked ~ .logic-inputs label[for="gA"]::after,
+#gB:checked ~ .logic-inputs label[for="gB"]::after,
+#fA:checked ~ .adder-inputs label[for="fA"]::after,
+#fB:checked ~ .adder-inputs label[for="fB"]::after,
+#fC:checked ~ .adder-inputs label[for="fC"]::after {
+  transform: translateX(18px);
+  background: #06281f;
+}
+
+/* ============================================================
+   01 · VARIÁVEIS
+   ============================================================ */
+.demo--vars {
+  gap: .4rem;
+  /* counters computados pela engine CSS — provam que os valores numéricos
+     do demo (16, 32) NÃO são strings HTML, mas saída da cascade. */
+  counter-reset: cv-base 16 cv-dobro calc(16 * 2);
+}
+.var-row {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  padding: var(--space-xs) var(--space-3xs);
+  border-bottom: 1px dashed var(--line);
+}
+.var-row span { color: var(--txt-dim); }
+.var-row b { color: var(--accent); }
+.var-row--base b::before  { content: counter(cv-base);  }
+.var-row--dobro b::before { content: counter(cv-dobro); }
+.swatch {
+  width: 60px; height: 18px; border-radius: var(--r-xs);
+  background: var(--cor);
+  display: inline-block;
+}
+
+/* ============================================================
+   02 · FUNÇÕES
+   ============================================================ */
+/* "24px" exibido vem de counter+calc — engine CSS avalia, garante consistência
+   visual mesmo em browsers sem suporte a @function (onde padding cai pra 1rem). */
+.demo--fns { counter-reset: fn-px calc(12 * 2); }
+.fn-box {
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  padding: var(--space-md);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+/* usa --dobrar(12px) onde houver suporte (Chrome 139+) */
+@supports (padding: --dobrar(0px)) {
+  .fn-box { padding: --dobrar(12px); }
+}
+.fn-box b { color: var(--accent); }
+.fn-box b::before { content: counter(fn-px) "px"; }
+.fn-box--clear {
+  /* fallback universal */
+  background: #2747b0;
+  color: #fff;
+  border: none;
+}
+/* usa a função nativa onde houver suporte */
+@supports (background: --clarear(#1d4ed8)) {
+  .fn-box--clear { background: --clarear(#1d4ed8); }
+}
+
+/* ============================================================
+   03 · CONDICIONAIS
+   ============================================================ */
+.if-btn {
+  font-family: var(--mono);
+  border: 1px solid var(--accent2);
+  background: rgba(129,140,248,.12);
+  color: var(--txt);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  /* fallback */
+  width: 100%;
+}
+/* condicional nativa de verdade */
+@supports (width: if(media(width < 600px): 100%; else: 320px)) {
+  .if-btn { width: if(media(width < 600px): 100%; else: 320px); }
+}
+
+/* if/else universal via :checked */
+.saida { font-family: var(--mono); font-size: var(--text-lg); min-height: 1.5em; }
+.saida--big { font-size: 1.3rem; font-weight: 700; }
+#porta:not(:checked) ~ .saida::after {
+  content: "ACESSO NEGADO ✕";
+  color: var(--danger);
+}
+#porta:checked ~ .saida::after {
+  content: "ACESSO LIBERADO ✓";
+  color: var(--on);
+}
+
+/* ============================================================
+   04 · LOOPS
+   ============================================================ */
+.demo--loop { flex-direction: row; align-items: center; gap: var(--space-2xl); flex-wrap: wrap; }
+.motor {
+  width: 70px; height: 70px;
+  border-radius: var(--r-2xl);
+  background: conic-gradient(from 0deg, var(--accent), var(--accent2), var(--accent));
+  animation: passo 2.2s linear infinite;   /* while(true) */
+  flex: none;
+  box-shadow: 0 0 30px rgba(94,234,212,.3);
+}
+@keyframes passo {
+  from { transform: rotate(0turn); }
+  to   { transform: rotate(1turn); }
+}
+.contador { list-style: none; counter-reset: i; }
+.contador li {
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  color: var(--txt-dim);
+  padding: .15rem 0;
+}
+.contador li::before {
+  counter-increment: i;             /* for embutido */
+  content: "for(i=" counter(i) ") → executa";
+  color: var(--accent);
+}
+
+/* ============================================================
+   05 · LÓGICA BOOLEANA — portas como circuito
+   ============================================================ */
+.logic-lab, .adder-lab {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  padding: var(--space-xl);
+}
+.logic-inputs, .adder-inputs {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: 1.6rem;
+}
+
+/* Indicador 0/1 dentro do label. Esconde o "0" do HTML (font-size:0) e o
+   imprime via ::after — assim o estado liga simplesmente trocando o content. */
+.switch--io b { font-size: 0; color: var(--danger); }
+.switch--io b::after {
+  content: "0";
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+#gA:checked ~ .logic-inputs label[for="gA"] b,
+#gB:checked ~ .logic-inputs label[for="gB"] b,
+#fA:checked ~ .adder-inputs label[for="fA"] b,
+#fB:checked ~ .adder-inputs label[for="fB"] b,
+#fC:checked ~ .adder-inputs label[for="fC"] b { color: var(--on); }
+#gA:checked ~ .logic-inputs label[for="gA"] b::after,
+#gB:checked ~ .logic-inputs label[for="gB"] b::after,
+#fA:checked ~ .adder-inputs label[for="fA"] b::after,
+#fB:checked ~ .adder-inputs label[for="fB"] b::after,
+#fC:checked ~ .adder-inputs label[for="fC"] b::after { content: "1"; }
+
+.gates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: .9rem;
+}
+.gate {
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: var(--space-md);
+  text-align: center;
+  background: var(--bg-soft);
+  font-family: var(--mono);
+}
+.gate span { display: block; font-size: var(--text-sm); color: var(--txt-dim); margin-bottom: var(--space-sm); }
+.gate i {
+  display: block;
+  width: 34px; height: 34px;
+  margin: 0 auto;
+  border-radius: var(--r-circle);
+  background: var(--off);
+  border: 2px solid var(--lamp-border-off);
+  transition: background var(--dur-quick), box-shadow var(--dur-quick), border-color var(--dur-quick);
+}
+
+/* --- AVALIAÇÃO BOOLEANA EM CSS ---
+   Inputs #gA #gB são irmãos de .gates (que contém as lâmpadas). */
+
+/* AND: A E B */
+#gA:checked ~ #gB:checked ~ .gates .and i {
+  background: var(--on); border-color: var(--on); box-shadow: var(--glow-on);
+}
+/* OR: A OU B */
+#gA:checked ~ .gates .or i,
+#gB:checked ~ .gates .or i {
+  background: var(--on); border-color: var(--on); box-shadow: var(--glow-on);
+}
+/* XOR: exatamente um (liga em A ou B, desliga quando ambos) */
+#gA:checked ~ .gates .xor i,
+#gB:checked ~ .gates .xor i {
+  background: var(--on); border-color: var(--on); box-shadow: var(--glow-on);
+}
+#gA:checked ~ #gB:checked ~ .gates .xor i {   /* maior especificidade: desliga */
+  background: var(--off); border-color: var(--lamp-border-off); box-shadow: none;
+}
+/* NAND: ligado por padrão, desliga só quando A E B */
+.gates .nand i { background: var(--on); border-color: var(--on); box-shadow: var(--glow-on); }
+#gA:checked ~ #gB:checked ~ .gates .nand i { background: var(--off); border-color: var(--lamp-border-off); box-shadow: none; }
+/* NOR: ligado por padrão, desliga se A ou B */
+.gates .nor i { background: var(--on); border-color: var(--on); box-shadow: var(--glow-on); }
+#gA:checked ~ .gates .nor i,
+#gB:checked ~ .gates .nor i { background: var(--off); border-color: var(--lamp-border-off); box-shadow: none; }
+/* NOT A: ligado por padrão, desliga quando A */
+.gates .nota i { background: var(--on); border-color: var(--on); box-shadow: var(--glow-on); }
+#gA:checked ~ .gates .nota i { background: var(--off); border-color: var(--lamp-border-off); box-shadow: none; }
+
+/* ============================================================
+   06 · SOMADOR COMPLETO (1 bit)  —  A,B,Cin -> Soma,Carry
+   ============================================================ */
+.adder-out { display: flex; gap: var(--space-md); }
+.bit-lamp {
+  flex: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 1.1rem;
+  text-align: center;
+  font-family: var(--mono);
+  background: var(--bg-soft);
+}
+.bit-lamp span { display: block; font-size: var(--text-sm); color: var(--txt-dim); margin-bottom: .6rem; }
+.bit-lamp i {
+  display: block; width: 30px; height: 30px; margin: 0 auto var(--space-xs);
+  border-radius: var(--r-circle); background: var(--off); border: 2px solid var(--lamp-border-off);
+  transition: background var(--dur-quick), box-shadow var(--dur-quick), border-color var(--dur-quick);
+}
+/* Mesmo padrão de .switch--io b: oculta o "0" do HTML e o pinta via ::after,
+   trocando o content quando a saída do somador acende (regras abaixo). */
+.bit-lamp b { font-size: 0; }
+.bit-lamp b::after {
+  content: "0";
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--txt-dim);
+}
+
+/* acende lâmpada + mostra 1 (helper) */
+/* SOMA = paridade ímpar: combinações 100, 010, 001, 111 */
+#fA:checked  ~ #fB:not(:checked) ~ #fC:not(:checked) ~ .adder-out .sum i,
+#fA:not(:checked) ~ #fB:checked  ~ #fC:not(:checked) ~ .adder-out .sum i,
+#fA:not(:checked) ~ #fB:not(:checked) ~ #fC:checked  ~ .adder-out .sum i,
+#fA:checked  ~ #fB:checked  ~ #fC:checked  ~ .adder-out .sum i {
+  background: var(--on); border-color: var(--on); box-shadow: var(--glow-on);
+}
+#fA:checked  ~ #fB:not(:checked) ~ #fC:not(:checked) ~ .adder-out .sum b::after,
+#fA:not(:checked) ~ #fB:checked  ~ #fC:not(:checked) ~ .adder-out .sum b::after,
+#fA:not(:checked) ~ #fB:not(:checked) ~ #fC:checked  ~ .adder-out .sum b::after,
+#fA:checked  ~ #fB:checked  ~ #fC:checked  ~ .adder-out .sum b::after {
+  content: "1"; color: var(--on);
+}
+
+/* CARRY = maioria (>=2 ligados): combinações 110, 101, 011, 111 */
+#fA:checked  ~ #fB:checked  ~ #fC:not(:checked) ~ .adder-out .carry i,
+#fA:checked  ~ #fB:not(:checked) ~ #fC:checked  ~ .adder-out .carry i,
+#fA:not(:checked) ~ #fB:checked  ~ #fC:checked  ~ .adder-out .carry i,
+#fA:checked  ~ #fB:checked  ~ #fC:checked  ~ .adder-out .carry i {
+  background: var(--on); border-color: var(--on); box-shadow: var(--glow-on);
+}
+#fA:checked  ~ #fB:checked  ~ #fC:not(:checked) ~ .adder-out .carry b::after,
+#fA:checked  ~ #fB:not(:checked) ~ #fC:checked  ~ .adder-out .carry b::after,
+#fA:not(:checked) ~ #fB:checked  ~ #fC:checked  ~ .adder-out .carry b::after,
+#fA:checked  ~ #fB:checked  ~ #fC:checked  ~ .adder-out .carry b::after {
+  content: "1"; color: var(--on);
+}
+
+/* ============================================================
+   07 · RULE 110  (1 geração computada por CSS)
+   ON quando vizinhança (E,C,D) ∈ {001,010,011,101,110}
+   ============================================================ */
+.ca {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  padding: var(--space-xl);
+}
+.ca-label { font-family: var(--mono); font-size: var(--text-sm); color: var(--txt-dim); margin: var(--space-sm) 0 var(--space-xs); }
+.ca-seed, .ca-next {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.ca-seed label {
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: var(--off);
+  border: 1px solid var(--lamp-border-off);
+  cursor: pointer;
+  transition: background var(--dur-fast), box-shadow var(--dur-fast);
+}
+.ca-seed label:hover { border-color: var(--accent2); }
+.o {
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: var(--off);
+  border: 1px solid var(--lamp-border-off);
+  transition: background var(--dur-fast), box-shadow var(--dur-fast);
+}
+/* destacar célula da semente ligada */
+#r0:checked ~ .ca-seed label[for="r0"],
+#r1:checked ~ .ca-seed label[for="r1"],
+#r2:checked ~ .ca-seed label[for="r2"],
+#r3:checked ~ .ca-seed label[for="r3"],
+#r4:checked ~ .ca-seed label[for="r4"],
+#r5:checked ~ .ca-seed label[for="r5"],
+#r6:checked ~ .ca-seed label[for="r6"],
+#r7:checked ~ .ca-seed label[for="r7"] {
+  background: var(--accent2);
+  box-shadow: var(--glow-seed);
+}
+
+/* ----- célula o0 : E=0, C=r0, D=r1  → padrões com E=0: 001,010,011 ----- */
+#r0:not(:checked) ~ #r1:checked      ~ .ca-next .o0,   /* 001 */
+#r0:checked       ~ #r1:not(:checked) ~ .ca-next .o0,  /* 010 */
+#r0:checked       ~ #r1:checked      ~ .ca-next .o0    /* 011 */
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o1 : E=r0, C=r1, D=r2 ----- */
+#r0:not(:checked) ~ #r1:not(:checked) ~ #r2:checked      ~ .ca-next .o1, /* 001 */
+#r0:not(:checked) ~ #r1:checked       ~ #r2:not(:checked) ~ .ca-next .o1, /* 010 */
+#r0:not(:checked) ~ #r1:checked       ~ #r2:checked      ~ .ca-next .o1, /* 011 */
+#r0:checked       ~ #r1:not(:checked) ~ #r2:checked      ~ .ca-next .o1, /* 101 */
+#r0:checked       ~ #r1:checked       ~ #r2:not(:checked) ~ .ca-next .o1  /* 110 */
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o2 : E=r1, C=r2, D=r3 ----- */
+#r1:not(:checked) ~ #r2:not(:checked) ~ #r3:checked      ~ .ca-next .o2,
+#r1:not(:checked) ~ #r2:checked       ~ #r3:not(:checked) ~ .ca-next .o2,
+#r1:not(:checked) ~ #r2:checked       ~ #r3:checked      ~ .ca-next .o2,
+#r1:checked       ~ #r2:not(:checked) ~ #r3:checked      ~ .ca-next .o2,
+#r1:checked       ~ #r2:checked       ~ #r3:not(:checked) ~ .ca-next .o2
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o3 : E=r2, C=r3, D=r4 ----- */
+#r2:not(:checked) ~ #r3:not(:checked) ~ #r4:checked      ~ .ca-next .o3,
+#r2:not(:checked) ~ #r3:checked       ~ #r4:not(:checked) ~ .ca-next .o3,
+#r2:not(:checked) ~ #r3:checked       ~ #r4:checked      ~ .ca-next .o3,
+#r2:checked       ~ #r3:not(:checked) ~ #r4:checked      ~ .ca-next .o3,
+#r2:checked       ~ #r3:checked       ~ #r4:not(:checked) ~ .ca-next .o3
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o4 : E=r3, C=r4, D=r5 ----- */
+#r3:not(:checked) ~ #r4:not(:checked) ~ #r5:checked      ~ .ca-next .o4,
+#r3:not(:checked) ~ #r4:checked       ~ #r5:not(:checked) ~ .ca-next .o4,
+#r3:not(:checked) ~ #r4:checked       ~ #r5:checked      ~ .ca-next .o4,
+#r3:checked       ~ #r4:not(:checked) ~ #r5:checked      ~ .ca-next .o4,
+#r3:checked       ~ #r4:checked       ~ #r5:not(:checked) ~ .ca-next .o4
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o5 : E=r4, C=r5, D=r6 ----- */
+#r4:not(:checked) ~ #r5:not(:checked) ~ #r6:checked      ~ .ca-next .o5,
+#r4:not(:checked) ~ #r5:checked       ~ #r6:not(:checked) ~ .ca-next .o5,
+#r4:not(:checked) ~ #r5:checked       ~ #r6:checked      ~ .ca-next .o5,
+#r4:checked       ~ #r5:not(:checked) ~ #r6:checked      ~ .ca-next .o5,
+#r4:checked       ~ #r5:checked       ~ #r6:not(:checked) ~ .ca-next .o5
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o6 : E=r5, C=r6, D=r7 ----- */
+#r5:not(:checked) ~ #r6:not(:checked) ~ #r7:checked      ~ .ca-next .o6,
+#r5:not(:checked) ~ #r6:checked       ~ #r7:not(:checked) ~ .ca-next .o6,
+#r5:not(:checked) ~ #r6:checked       ~ #r7:checked      ~ .ca-next .o6,
+#r5:checked       ~ #r6:not(:checked) ~ #r7:checked      ~ .ca-next .o6,
+#r5:checked       ~ #r6:checked       ~ #r7:not(:checked) ~ .ca-next .o6
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ----- célula o7 : E=r6, C=r7, D=0 → padrões com D=0: 010,110 ----- */
+#r6:not(:checked) ~ #r7:checked ~ .ca-next .o7,  /* 010 */
+#r6:checked       ~ #r7:checked ~ .ca-next .o7   /* 110 */
+{ background: var(--accent); box-shadow: var(--glow-ca); }
+
+/* ============================================================
+   08 · MÁQUINA DE ESTADOS — semáforo
+   ============================================================ */
+.demo--fsm { align-items: center; gap: var(--space-xl); }
+.semaforo {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  width: max-content;
+}
+.luz {
+  width: 46px; height: 46px;
+  border-radius: var(--r-circle);
+  background: var(--surface-dim);
+  opacity: .25;
+}
+.vermelho { animation: s-vermelho 9s steps(1, end) infinite; }
+.amarelo  { animation: s-amarelo  9s steps(1, end) infinite; }
+.verde    { animation: s-verde    9s steps(1, end) infinite; }
+
+@keyframes s-verde {
+  0%, 44%   { opacity: 1; background: var(--on); box-shadow: 0 0 22px var(--on); }
+  45%, 100% { opacity: .25; background: var(--surface-dim); box-shadow: none; }
+}
+@keyframes s-amarelo {
+  45%, 55%  { opacity: 1; background: #fbbf24; box-shadow: 0 0 22px #fbbf24; }
+  0%,44%,56%,100% { opacity: .25; background: var(--surface-dim); box-shadow: none; }
+}
+@keyframes s-vermelho {
+  56%, 99%  { opacity: 1; background: var(--danger); box-shadow: 0 0 22px var(--danger); }
+  0%, 55%   { opacity: .25; background: var(--surface-dim); box-shadow: none; }
+}
+.fsm-state { font-family: var(--mono); color: var(--txt-dim); }
+.fsm-state b { color: var(--accent); }
+.fsm-state b::after {
+  content: "VERDE";
+  animation: s-texto 9s steps(1, end) infinite;
+}
+@keyframes s-texto {
+  0%   { content: "VERDE"; }
+  45%  { content: "AMARELO"; }
+  56%  { content: "VERMELHO"; }
+}
+
+/* ============================================================
+   VEREDITO / REFERÊNCIAS / FOOTER
+   ============================================================ */
+.verdict {
+  padding: 4.5rem 0;
+  text-align: center;
+  border-bottom: 1px solid var(--line);
+}
+.verdict h2 { font-size: var(--text-2xl); margin-bottom: var(--space-md); }
+.verdict p { max-width: 65ch; margin: 0 auto var(--space-md); color: var(--txt-dim); }
+.verdict strong { color: var(--txt); }
+.verdict .qed {
+  font-family: var(--mono);
+  font-size: 1.15rem;
+  color: var(--accent);
+  margin-top: var(--space-xl);
+}
+.qed span { color: var(--accent2); }
+
+.refs { padding: 4rem 0; }
+.refs h2 { font-size: 1.3rem; margin-bottom: var(--space-lg); }
+.refs ul { list-style: none; display: grid; gap: var(--space-sm); }
+.refs li {
+  font-size: .92rem;
+  color: var(--txt-dim);
+  padding-left: var(--space-lg);
+  position: relative;
+}
+.refs li::before { content: "▹"; position: absolute; left: 0; color: var(--accent); }
+.refs a { color: var(--accent); text-decoration: none; }
+.refs a:hover { text-decoration: underline; }
+
+.foot {
+  text-align: center;
+  padding: var(--space-3xl) var(--space-md);
+  color: var(--txt-dim);
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  border-top: 1px solid var(--line);
+}
+
+/* ============================================================
+   ANIMAÇÕES UTILITÁRIAS
+   ============================================================ */
+@keyframes pulse { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
+@keyframes bob   { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+/* ============================================================
+   NAVEGAÇÃO POR ABAS (radio = estado da página)
+   ============================================================ */
+.topnav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) clamp(var(--space-md), 4vw, var(--space-2xl));
+  background: color-mix(in oklch, var(--bg) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);   /* Safari */
+  border-bottom: 1px solid var(--line);
+}
+
+/* Brand é label-home: clique vai para nav-demos (A Prova).
+   Estrutura em duas partes: marker <//> em monospace neutro + nome em accent. */
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .4em;
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--accent);
+  cursor: pointer;
+  user-select: none;
+  padding: var(--space-xs) var(--space-sm);
+  margin-left: calc(var(--space-sm) * -1);   /* hit-area sem empurrar layout */
+  border-radius: var(--r-md);
+  transition: color var(--dur-quick), background var(--dur-quick);
+}
+.brand__mark {
+  color: var(--txt-dim);
+  font-weight: 600;
+  transition: color var(--dur-quick);
+}
+.brand:hover { background: color-mix(in oklch, var(--accent) 8%, transparent); }
+.brand:hover .brand__mark { color: var(--accent); }
+.brand:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Breadcrumb do projeto: renderizado pela ROM abaixo (uma regra por proj-X).
+   Empurra os navtabs para a direita via margin-right: auto. */
+.topnav-crumb {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--txt-dim);
+  margin-right: auto;
+  min-height: 1em;        /* reserva slot — evita CLS quando aparece */
+  letter-spacing: .02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50vw;
+}
+/* Quando proj-none (default, grid de cards) ou nav-demos ativo, breadcrumb vazia.
+   ::before mostra o separador, ::after o nome do projeto — só com ambas as condições.
+   Os :is() agrupam: nav-projects checked E qualquer proj-X (não-none) checked. */
+#nav-projects:checked ~ .topnav .topnav-crumb::before { content: "›"; padding: 0 .5em; color: var(--line); }
+#nav-projects:checked ~ .topnav .topnav-crumb::after  { color: var(--txt); }
+
+#nav-projects:checked ~ #proj-app:checked      ~ .topnav .topnav-crumb::after { content: "TO-DO"; }
+#nav-projects:checked ~ #proj-calc:checked     ~ .topnav .topnav-crumb::after { content: "Calculadora"; }
+#nav-projects:checked ~ #proj-wizard:checked   ~ .topnav .topnav-crumb::after { content: "Wizard"; }
+#nav-projects:checked ~ #proj-bit4:checked     ~ .topnav .topnav-crumb::after { content: "BIT-4 CPU"; }
+#nav-projects:checked ~ #proj-pomodoro:checked ~ .topnav .topnav-crumb::after { content: "Pomodoro"; }
+#nav-projects:checked ~ #proj-pixel:checked    ~ .topnav .topnav-crumb::after { content: "Pixel-Art"; }
+#nav-projects:checked ~ #proj-bf:checked       ~ .topnav .topnav-crumb::after { content: "BF-MINI"; }
+#nav-projects:checked ~ #proj-maze:checked     ~ .topnav .topnav-crumb::after { content: "MAZE"; }
+#nav-projects:checked ~ #proj-rpn:checked      ~ .topnav .topnav-crumb::after { content: "Stack RPN"; }
+#nav-projects:checked ~ #proj-ttt:checked      ~ .topnav .topnav-crumb::after { content: "TTT-IA"; }
+/* proj-none (grid de cards) suprime separador. nav-demos não precisa de regra:
+   #nav-projects:checked é falso → regra base não dispara → ::before vazio naturalmente. */
+#nav-projects:checked ~ #proj-none:checked ~ .topnav .topnav-crumb::before { content: none; }
+.navtab {
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  padding: var(--space-xs) .95rem;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  color: var(--txt-dim);
+  border: 1px solid transparent;
+  transition: color var(--dur-quick), background var(--dur-quick), border-color var(--dur-quick);
+}
+.navtab:hover { color: var(--txt); border-color: var(--line); }
+
+#nav-demos:checked    ~ .topnav label[for="nav-demos"],
+#nav-projects:checked ~ .topnav label[for="nav-projects"] {
+  color: var(--bg);
+  background: linear-gradient(100deg, var(--accent), var(--accent2));
+  border-color: transparent;
+  font-weight: 700;
+}
+
+.page { display: none; }
+#nav-demos:checked    ~ .page--demos    { display: block; }
+#nav-projects:checked ~ .page--projects { display: block; }
+
+.cta-app { font-family: var(--mono); color: var(--txt-dim); margin-top: var(--space-xl); }
+.inline-link {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ============================================================
+   ABA 2 · APLICAÇÃO (To-Do)
+   ============================================================ */
+.app-wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(var(--space-3xl), 7vh, 5rem) var(--space-lg) 4rem;
+}
+.app-title {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin: .6rem 0 var(--space-md);
+  background: linear-gradient(100deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.lead--app { margin: 0 0 var(--space-3xl); }
+
+.todo {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  overflow: hidden;
+  box-shadow: var(--elev-card);
+}
+.todo__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: 1.1rem var(--space-lg);
+  border-bottom: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+.todo__h { font-size: 1.05rem; font-weight: 700; }
+.todo__tabs { display: flex; gap: .35rem; }
+.todo__tab {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  padding: .4rem var(--space-sm);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  color: var(--txt-dim);
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  transition: var(--dur-quick);
+}
+.todo__tab:hover { color: var(--txt); }
+
+/* aba de filtro ativa (radios são irmãos de .todo) */
+#f-todas:checked  ~ .todo label[for="f-todas"].todo__tab,
+#f-ativas:checked ~ .todo label[for="f-ativas"].todo__tab,
+#f-feitas:checked ~ .todo label[for="f-feitas"].todo__tab {
+  color: var(--bg);
+  background: linear-gradient(100deg, var(--accent), var(--accent2));
+  border-color: transparent;
+  font-weight: 700;
+}
+
+/* focus-visible: encaminha foco do input oculto para o rótulo visível */
+#f-todas:focus-visible  ~ .todo .todo__tab[for="f-todas"],
+#f-ativas:focus-visible ~ .todo .todo__tab[for="f-ativas"],
+#f-feitas:focus-visible ~ .todo .todo__tab[for="f-feitas"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.task__chk:focus-visible  ~ .task__box { outline: 2px solid var(--accent);  outline-offset: 2px; border-radius: var(--r-sm); }
+.task__delc:focus-visible ~ .task__del { outline: 2px solid var(--danger); outline-offset: 2px; border-radius: var(--r-sm); }
+
+.todo__list { list-style: none; counter-reset: rest; }
+
+.task {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .95rem var(--space-lg);
+  border-bottom: 1px solid var(--line);
+  max-height: 90px;
+  overflow: hidden;
+  transition: max-height var(--dur-slow) ease, opacity var(--dur-slow) ease,
+              padding var(--dur-slow) ease, border-width var(--dur-slow) ease, background var(--dur-quick);
+}
+.task:hover { background: rgba(94, 234, 212, .035); }
+
+.task__box {
+  width: 24px; height: 24px;     /* WCAG AA: mínimo 24x24 hit area */
+  flex: none;
+  border: 2px solid #344056;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  color: var(--on-bright);
+  font-size: 15px;
+  font-weight: 900;
+  transition: background var(--dur-quick), border-color var(--dur-quick), transform var(--dur-tap);
+}
+.task__box:hover  { border-color: var(--accent); }
+.task__box:active { transform: scale(.92); }
+.task__chk:checked ~ .task__box {
+  background: var(--on);
+  border-color: var(--on);
+}
+.task__chk:checked ~ .task__box::after { content: "✓"; }
+
+/* Strike-through animado: pseudo-element com width 0→100% em vez de
+   text-decoration (não-animável). Cresce da esquerda quando check ativa. */
+.task__txt {
+  flex: 1;
+  position: relative;
+  transition: opacity var(--dur-slow), color var(--dur-slow);
+}
+.task__txt::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 0;
+  height: 1px; width: 0;
+  background: currentColor;
+  transition: width var(--dur-emphasis) var(--ease-emphasis);
+}
+.task__chk:checked ~ .task__txt { opacity: .45; }
+.task__chk:checked ~ .task__txt::after { width: 100%; }
+
+.task__del {
+  margin-left: auto;
+  flex: none;
+  width: 28px; height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--txt-dim);
+  transition: color var(--dur-quick), background var(--dur-quick), transform var(--dur-tap);
+}
+.task__del:active { transform: scale(.85); }
+.task__del:hover { color: var(--danger); background: rgba(248, 113, 113, .12); }
+
+/* ---- LÓGICA DE DECISÃO/FILTRO (colapsa a tarefa) ---- */
+.task:has(.task__delc:checked),                                    /* excluída     */
+#f-ativas:checked ~ .todo .task:has(.task__chk:checked),           /* aba Ativas   */
+#f-feitas:checked ~ .todo .task:not(:has(.task__chk:checked)) {    /* aba Feitas   */
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  pointer-events: none;
+}
+
+/* ---- CONTADOR REATIVO (counters) ----
+   conta tarefas ATIVAS e NÃO excluídas, independente do filtro */
+.task:not(:has(.task__chk:checked)):not(:has(.task__delc:checked)) {
+  counter-increment: rest;
+}
+
+.todo__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  color: var(--txt-dim);
+  background: var(--bg-soft);
+}
+.todo__count { color: var(--accent); min-height: 1em; display: inline-block; }
+.todo__count::before { content: counter(rest) " tarefa(s) ativa(s)"; }
+.todo__link { color: var(--txt-dim); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.todo__link:hover { color: var(--accent); }
+
+.todo-form { margin: 0; }
+.todo__reset {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  padding: .35rem var(--space-sm);
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  color: var(--txt-dim);
+  cursor: pointer;
+  transition: color var(--dur-quick), border-color var(--dur-quick);
+}
+.todo__reset:hover { color: var(--danger); border-color: var(--danger); }
+
+.hint--center { text-align: center; margin-top: 1.4rem; }
+
+.src-title {
+  text-align: center;
+  font-size: 1.4rem;
+  margin: 3.5rem 0 .6rem;
+}
+.desc--center { text-align: center; margin-left: auto; margin-right: auto; }
+.src { margin-top: var(--space-xl); }
+.src__tag {
+  font-family: var(--mono);
+  font-size: .75rem;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--accent2);
+  background: rgba(129, 140, 248, .1);
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  padding: var(--space-xs) var(--space-md);
+  display: inline-block;
+}
+.src .code {
+  border-radius: 0 var(--r-xl) var(--r-xl) var(--r-xl);
+  margin-top: -1px;
+}
+.qed--app { text-align: center; margin-top: 3rem; }
+
+/* ============================================================
+   ABA 3 · CALCULADORA  (teclado ÚNICO, comprimento variável 1–3 dígitos)
+   Fluxo: dígito(s) → operação → dígito(s) → resultado.
+
+   Estado em radios dentro de <form class="calc-form">:
+     op  (add|sub|mul|div|mod|pow) — nenhuma marcada inicialmente
+     A0, A1, A2  — slots do 1º número (mais signif. → menos signif.)
+     B0, B1, B2  — slots do 2º número
+
+   Como o "valor" do número emerge sem read-modify-write:
+     |N1| = nº de slots A_k marcados;   o slot k contribui A_k · 10^(|N1|-1-k)
+     ao counter `res`. Logo o algoritmo posicional REAL é aplicado pelo
+     próprio motor de CSS, sem tabela. A operação fecha N1 porque desativa
+     os rótulos lbl-a* (regras abaixo incluem :not(:has([name="op"]:checked))).
+   ============================================================ */
+.calc-form { margin: 0; }
+
+.calc {
+  counter-reset: res 0;               /* contador do resultado (+ − ×) */
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3xl);
+  padding: 1.4rem;
+  box-shadow: var(--elev-card);
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+/* acumuladores: geram caixa (counter-increment exige caixa) mas invisíveis.
+   Um span por slot/par garante que contribuições NÃO se sobrescrevam — em
+   CSS, regras concorrentes sobre o mesmo elemento aplicam só a vencedora,
+   mas regras sobre elementos distintos somam todas no counter. */
+.acc, .acc span {
+  position: absolute;
+  width: 0; height: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- visor: linha de expressão (pequena) + linha grande ---- */
+.calc__display {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2xl);
+  padding: 1.1rem 1.3rem;
+  text-align: right;
+  font-family: var(--mono);
+  margin-bottom: var(--space-lg);
+  overflow: hidden;
+}
+.calc__expr {
+  font-size: var(--text-xl);
+  color: var(--txt-dim);
+  min-height: 1.4em;
+  word-break: break-all;
+}
+.calc__expr .dispN1 [class^="dispN1__"]::after { color: var(--txt-dim); }
+.calc__expr .dispN2 [class^="dispN2__"]::after { color: var(--accent); }
+.calc__expr .dispOp::after { color: var(--accent2); }
+
+.calc__big {
+  font-size: clamp(2.2rem, 11vw, 3rem);
+  font-weight: 800;
+  color: var(--txt);
+  word-break: break-all;
+  margin-top: .15rem;
+  min-height: 1.2em;
+}
+/* default do bigN1 quando ainda nada foi digitado em A: mostra "0".
+   Quando A0 marcado, a regra gerada (#A0_v:checked ~ .calc .bigN1__d0::after)
+   vence pela cascata + especificidade do seletor de irmão. */
+.calc__big .bigN1__d0::after { content: "0"; }
+/* resultado: por padrão imprime counter(res) (+ − ×); ÷/mod/^ sobrescrevem
+   via tabela gerada (seletor com mais :has → maior especificidade). */
+.calc__big .dispR::after { content: counter(res); color: var(--accent2); }
+
+/* MÁQUINA DE ESTADOS do visor: bigN1 enquanto digita A; troca para dispR
+   assim que existirem op marcada E pelo menos B0 marcado. */
+.calc__big .dispR { display: none; }
+.calc__big .bigN1 { display: inline; }
+.calc-form:not(:has(#op-none:checked)):not(:has(#B0_empty:checked)) .bigN1 { display: none; }
+.calc-form:not(:has(#op-none:checked)):not(:has(#B0_empty:checked)) .dispR {
+  display: inline;
+  /* Reveal: animação dispara quando regra fica ativa pela primeira vez.
+     scale leve + glow do accent2 indica "computei e tenho um resultado". */
+  animation: calc-result-reveal .4s var(--ease-emphasis);
+}
+@keyframes calc-result-reveal {
+  0%   { transform: scale(.9); text-shadow: 0 0 0 transparent; }
+  60%  { transform: scale(1.04); text-shadow: 0 0 18px rgba(129, 140, 248, .55); }
+  100% { transform: scale(1);    text-shadow: 0 0 0 transparent; }
+}
+
+/* aviso para ÷/mod/^ fora do subdomínio enxuto (acionado pela tabela gerada).
+   Sempre layout-ed (height 0 colapsa), só visual via opacity/translateY → permite
+   transição suave em vez do "pop" abrupto de display:none → block. */
+.calc-err {
+  display: block;
+  max-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  font-size: var(--text-xs);
+  letter-spacing: .03em;
+  color: var(--danger);
+  text-align: right;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--dur-base), transform var(--dur-base), max-height var(--dur-slow), margin-top var(--dur-slow);
+}
+.calc-form:has(:is(#op-div,#op-mod,#op-pow):checked):not(:has(#A3_empty:checked)) .calc-err,
+.calc-form:has(:is(#op-div,#op-mod,#op-pow):checked):not(:has(#B1_empty:checked)) .calc-err {
+  max-height: 3em;
+  margin-top: var(--space-xs);
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.calc__ops {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: .45rem;
+  margin-bottom: .9rem;
+}
+.opkey {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  padding: var(--space-sm) 0;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  color: var(--accent);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  transition: transform var(--dur-tap), background var(--dur-quick), color var(--dur-quick), box-shadow var(--dur-quick);
+}
+.opkey:hover { color: var(--txt); border-color: var(--accent2); }
+.opkey:active { transform: scale(.94); }
+
+/* ---- TECLADO ÚNICO (3 colunas, estilo calculadora) ---- */
+.calc__pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+}
+.key {
+  position: relative;                 /* ancora os 6 rótulos sobrepostos */
+  font-family: var(--mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  padding: .9rem 0;
+  border-radius: var(--r-xl);
+  color: var(--txt);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  transition: transform var(--dur-tap), background var(--dur-quick), border-color var(--dur-quick);
+  user-select: none;
+}
+.key:hover { border-color: var(--accent); }
+.key:active { transform: scale(.95); }
+.key--wide { grid-column: span 2; }   /* o 0 ocupa duas colunas */
+
+/* rótulos sobrepostos cobrindo a tecla inteira (área clicável) */
+.key .lbl {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  border-radius: var(--r-xl);
+  pointer-events: none;               /* todos inertes; o estado ativa um */
+}
+
+/* MÁQUINA DE ESTADOS de entrada — comprimento variável.
+   O slot A_k é a próxima posição livre em A se: A_{k-1} marcado (ou k=0
+   e A0 não marcado), A_k não marcado, e NENHUMA operação marcada. Assim,
+   apertar a operação a qualquer momento (depois do 1º dígito) fecha N1.
+   O slot B_k é análogo após op marcada (depende só de B_{k-1}/B_k). */
+/* FSM de input — semântica via radios _empty (checked por default; user typing
+   = empty unchecked via mutex). Backspace clica label apontando ao _empty correto
+   (FSM ativa um por vez), volta empty a checked → digit unchecked. */
+.calc-form:has(#A0_empty:checked):has(#op-none:checked) .lbl-a0 { pointer-events: auto; }
+.calc-form:not(:has(#A0_empty:checked)):has(#A1_empty:checked):has(#op-none:checked) .lbl-a1 { pointer-events: auto; }
+.calc-form:not(:has(#A1_empty:checked)):has(#A2_empty:checked):has(#op-none:checked) .lbl-a2 { pointer-events: auto; }
+.calc-form:not(:has(#A2_empty:checked)):has(#A3_empty:checked):has(#op-none:checked) .lbl-a3 { pointer-events: auto; }
+.calc-form:not(:has(#A0_empty:checked)):not(:has(#op-none:checked)):has(#B0_empty:checked) .lbl-b0 { pointer-events: auto; }
+.calc-form:not(:has(#B0_empty:checked)):has(#B1_empty:checked) .lbl-b1 { pointer-events: auto; }
+.calc-form:not(:has(#B1_empty:checked)):has(#B2_empty:checked) .lbl-b2 { pointer-events: auto; }
+.calc-form:not(:has(#B2_empty:checked)):has(#B3_empty:checked) .lbl-b3 { pointer-events: auto; }
+
+/* FSM backspace — uma label ativa por vez, aponta para o radio _empty mais recente.
+   Ordem do "mais recente preenchido" → vazio: B3 → B2 → B1 → B0 → op → A3 → A2 → A1 → A0. */
+.calc-form:not(:has(#B3_empty:checked))                                 .lbl-bs-b3 { pointer-events: auto; }
+.calc-form:has(#B3_empty:checked):not(:has(#B2_empty:checked))          .lbl-bs-b2 { pointer-events: auto; }
+.calc-form:has(#B2_empty:checked):not(:has(#B1_empty:checked))          .lbl-bs-b1 { pointer-events: auto; }
+.calc-form:has(#B1_empty:checked):not(:has(#B0_empty:checked))          .lbl-bs-b0 { pointer-events: auto; }
+.calc-form:has(#B0_empty:checked):not(:has(#op-none:checked))           .lbl-bs-op { pointer-events: auto; }
+.calc-form:has(#op-none:checked):not(:has(#A3_empty:checked))           .lbl-bs-a3 { pointer-events: auto; }
+.calc-form:has(#op-none:checked):has(#A3_empty:checked):not(:has(#A2_empty:checked)) .lbl-bs-a2 { pointer-events: auto; }
+.calc-form:has(#op-none:checked):has(#A2_empty:checked):not(:has(#A1_empty:checked)) .lbl-bs-a1 { pointer-events: auto; }
+.calc-form:has(#op-none:checked):has(#A1_empty:checked):not(:has(#A0_empty:checked)) .lbl-bs-a0 { pointer-events: auto; }
+
+/* botão C: reset nativo do formulário (<button type="reset">, sem JS).
+   Herda tipografia e geometria de .key; só sobrescreve a paleta para o
+   contexto destrutivo. */
+.key--clear {
+  cursor: pointer;
+  color: var(--danger);
+  background: rgba(248, 113, 113, .08);
+  border-color: rgba(248, 113, 113, .35);
+}
+.key--clear:hover  { background: rgba(248, 113, 113, .16); border-color: var(--danger); }
+.key--clear:active { transform: scale(.94); }
+
+/* ⌫ backspace: undo do último input. 9 labels sobrepostas, FSM em style.css
+   ativa exatamente uma por vez apontando ao radio _empty mais recente — mutex
+   do grupo de radios desmarca o dígito ao marcar _empty.
+   Paleta accent2 (índigo) diferencia visualmente de C (destrutivo, danger). */
+.key--bs {
+  color: var(--accent2);
+  background: rgba(129, 140, 248, .08);
+  border-color: rgba(129, 140, 248, .35);
+}
+.key--bs:hover  { background: rgba(129, 140, 248, .16); border-color: var(--accent2); }
+.key--bs:active { transform: scale(.94); }
+.key .lbl-bs {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  border-radius: var(--r-xl);
+  pointer-events: none;  /* FSM ativa exatamente uma das 9 */
+}
+
+/* ============================================================
+   ABA 4 · PROJETOS — grade de cards e painéis de projeto
+   ============================================================ */
+.app-wrap--wide { max-width: 1080px; }
+
+.proj-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-md);
+  margin: var(--space-2xl) 0 var(--space-xl);
+}
+
+.proj-card {
+  display: block;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: 1.4rem 1.6rem;
+  cursor: pointer;
+  transition: border-color var(--dur-quick), box-shadow var(--dur-quick);
+  text-decoration: none;
+}
+.proj-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 18px rgba(94, 234, 212, .12);
+}
+/* focus-visible: radio oculto recebe foco → outline no card visível. */
+#proj-app:focus-visible      ~ .page--projects .proj-card[for="proj-app"],
+#proj-calc:focus-visible     ~ .page--projects .proj-card[for="proj-calc"],
+#proj-wizard:focus-visible   ~ .page--projects .proj-card[for="proj-wizard"],
+#proj-bit4:focus-visible     ~ .page--projects .proj-card[for="proj-bit4"],
+#proj-pomodoro:focus-visible ~ .page--projects .proj-card[for="proj-pomodoro"],
+#proj-pixel:focus-visible    ~ .page--projects .proj-card[for="proj-pixel"],
+#proj-bf:focus-visible       ~ .page--projects .proj-card[for="proj-bf"],
+#proj-maze:focus-visible     ~ .page--projects .proj-card[for="proj-maze"],
+#proj-rpn:focus-visible      ~ .page--projects .proj-card[for="proj-rpn"],
+#proj-ttt:focus-visible      ~ .page--projects .proj-card[for="proj-ttt"] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.proj-card__icon {
+  font-size: 1.8rem;
+  margin-bottom: var(--space-xs);
+  line-height: 1;
+  color: var(--accent);             /* ícone SVG herda via currentColor */
+  display: inline-flex;             /* centra SVG no slot */
+  align-items: center;
+  justify-content: center;
+}
+.proj-card:hover .proj-card__icon {
+  color: var(--accent2);
+  transition: color var(--dur-quick);
+}
+.proj-card__title {
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: .35rem;
+  letter-spacing: .04em;
+}
+.proj-card__desc {
+  font-size: var(--text-sm);
+  color: var(--txt-dim);
+  line-height: 1.5;
+}
+
+/* ---- painéis de projeto: ocultos por default ---- */
+.proj { display: none; }
+
+/* Quando proj-X está marcado: esconde a grade e mostra o painel X.
+   Os radios name="project" são irmãos anteriores de .page--projects,
+   portanto o seletor ~ alcança .page--projects e seus descendentes. */
+#proj-app:checked      ~ .page--projects .proj-grid { display: none; }
+#proj-calc:checked     ~ .page--projects .proj-grid { display: none; }
+#proj-wizard:checked   ~ .page--projects .proj-grid { display: none; }
+#proj-bit4:checked     ~ .page--projects .proj-grid { display: none; }
+#proj-pomodoro:checked ~ .page--projects .proj-grid { display: none; }
+#proj-pixel:checked    ~ .page--projects .proj-grid { display: none; }
+#proj-bf:checked       ~ .page--projects .proj-grid { display: none; }
+#proj-maze:checked     ~ .page--projects .proj-grid { display: none; }
+#proj-rpn:checked      ~ .page--projects .proj-grid { display: none; }
+#proj-ttt:checked      ~ .page--projects .proj-grid { display: none; }
+
+#proj-app:checked      ~ .page--projects .proj--app      { display: block; }
+#proj-calc:checked     ~ .page--projects .proj--calc     { display: block; }
+#proj-wizard:checked   ~ .page--projects .proj--wizard   { display: block; }
+#proj-bit4:checked     ~ .page--projects .proj--bit4     { display: block; }
+#proj-pomodoro:checked ~ .page--projects .proj--pomodoro { display: block; }
+#proj-pixel:checked    ~ .page--projects .proj--pixel    { display: block; }
+#proj-bf:checked       ~ .page--projects .proj--bf       { display: block; }
+#proj-maze:checked     ~ .page--projects .proj--maze     { display: block; }
+#proj-rpn:checked      ~ .page--projects .proj--rpn      { display: block; }
+#proj-ttt:checked      ~ .page--projects .proj--ttt      { display: block; }
+
+.proj__back {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  font-family: var(--mono);
+  font-size: .84rem;
+  color: var(--txt-dim);
+  cursor: pointer;
+  padding: .4rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  margin-bottom: var(--space-2xl);
+  transition: color var(--dur-quick), border-color var(--dur-quick);
+  user-select: none;
+}
+.proj__back:hover { color: var(--accent); border-color: var(--accent); }
+
+/* ===== Painel compartilhado dos projetos interativos ===== */
+
+.proj-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  padding: var(--space-lg);
+  max-width: 360px;
+  margin: 0 auto;
+  font-family: var(--mono);
+  box-shadow: var(--elev-card);
+}
+
+.proj-reset {
+  display: block;
+  width: 100%;
+  padding: .65rem;
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--txt-dim);
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-tap);
+}
+.proj-reset:active { transform: scale(.98); }
+
+.proj-reset:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+

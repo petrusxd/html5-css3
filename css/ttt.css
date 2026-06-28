@@ -1,0 +1,417 @@
+/* ============================================================
+   TTT-IA — Jogo da Velha com IA imbatível.
+   Estado: name="cN" (cN_X | cN_O) para N=0..8.
+   Mecanismo: labels .lbl-x-N ativam radios cN_X (jogador X);
+   ROM em css/ttt-ai.css ativa .o-move--M para jogada ótima de O.
+   ============================================================ */
+
+/* ===== 1 — Custom properties específicas do TTT-IA ===== */
+
+:root {
+  --ttt-cell-sz: clamp(4rem, 13vw, 5.5rem);
+  --ttt-line:    #1f2f42;
+  --ttt-x-color: var(--accent);
+  --ttt-o-color: #f97316;
+  --ttt-win-bg-x: color-mix(in oklch, var(--ttt-x-color) 12%, var(--surface-1));
+  --ttt-win-bg-o: color-mix(in oklch, var(--ttt-o-color) 12%, var(--surface-1));
+}
+
+/* ===== 2 — Container ===== */
+
+.ttt-form { margin: 0; }
+
+/* Aparência do painel: ver .proj-panel em style.css */
+
+/* ===== 3 — Grade 3×3 ===== */
+
+.ttt__grid {
+  display: grid;
+  grid-template-columns: repeat(3, var(--ttt-cell-sz));
+  grid-template-rows:    repeat(3, var(--ttt-cell-sz));
+  gap: 4px;
+  background: var(--ttt-line);
+  border: 2px solid var(--ttt-line);
+  border-radius: var(--r-md);
+  margin: 0 auto var(--space-sm);
+}
+
+/* ===== 4 — Células ===== */
+
+.ttt__cell {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-1);
+  transition: background var(--dur-base);
+}
+
+.ttt__mark {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(var(--ttt-cell-sz) * .55);
+  font-weight: 900;
+  pointer-events: none;
+  transition: opacity var(--dur-quick);
+}
+
+/* Hover preview do X em célula vazia: .lbl-x:hover só dispara quando a label
+   está com pointer-events:auto (célula vazia + jogo em andamento). Mostra X
+   semi-transparente para indicar onde a jogada vai acontecer. */
+.cell-0:has(.lbl-x-0:hover) .ttt__mark::after,
+.cell-1:has(.lbl-x-1:hover) .ttt__mark::after,
+.cell-2:has(.lbl-x-2:hover) .ttt__mark::after,
+.cell-3:has(.lbl-x-3:hover) .ttt__mark::after,
+.cell-4:has(.lbl-x-4:hover) .ttt__mark::after,
+.cell-5:has(.lbl-x-5:hover) .ttt__mark::after,
+.cell-6:has(.lbl-x-6:hover) .ttt__mark::after,
+.cell-7:has(.lbl-x-7:hover) .ttt__mark::after,
+.cell-8:has(.lbl-x-8:hover) .ttt__mark::after {
+  content: "X";
+  color: var(--ttt-x-color);
+  opacity: .25;
+}
+
+/* ===== 5 — Exibir X e O via .ttt__mark::after ===== */
+
+/* Célula 0 */
+.ttt-form:has(#c0_X:checked) .cell-0 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c0_O:checked) .cell-0 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 1 */
+.ttt-form:has(#c1_X:checked) .cell-1 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c1_O:checked) .cell-1 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 2 */
+.ttt-form:has(#c2_X:checked) .cell-2 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c2_O:checked) .cell-2 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 3 */
+.ttt-form:has(#c3_X:checked) .cell-3 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c3_O:checked) .cell-3 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 4 */
+.ttt-form:has(#c4_X:checked) .cell-4 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c4_O:checked) .cell-4 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 5 */
+.ttt-form:has(#c5_X:checked) .cell-5 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c5_O:checked) .cell-5 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 6 */
+.ttt-form:has(#c6_X:checked) .cell-6 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c6_O:checked) .cell-6 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 7 */
+.ttt-form:has(#c7_X:checked) .cell-7 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c7_O:checked) .cell-7 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* Célula 8 */
+.ttt-form:has(#c8_X:checked) .cell-8 .ttt__mark::after { content: "X"; color: var(--ttt-x-color); }
+.ttt-form:has(#c8_O:checked) .cell-8 .ttt__mark::after { content: "O"; color: var(--ttt-o-color); }
+
+/* ===== 6 — Labels de X nas células (FSM de pointer-events) ===== */
+
+/* Default: todos os labels X são inertes */
+.lbl-x {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+/* Ativo apenas em célula vazia (sem X e sem O marcados) */
+.ttt-form:not(:has(#c0_X:checked)):not(:has(#c0_O:checked)) .cell-0 .lbl-x-0 { pointer-events: auto; }
+.ttt-form:not(:has(#c1_X:checked)):not(:has(#c1_O:checked)) .cell-1 .lbl-x-1 { pointer-events: auto; }
+.ttt-form:not(:has(#c2_X:checked)):not(:has(#c2_O:checked)) .cell-2 .lbl-x-2 { pointer-events: auto; }
+.ttt-form:not(:has(#c3_X:checked)):not(:has(#c3_O:checked)) .cell-3 .lbl-x-3 { pointer-events: auto; }
+.ttt-form:not(:has(#c4_X:checked)):not(:has(#c4_O:checked)) .cell-4 .lbl-x-4 { pointer-events: auto; }
+.ttt-form:not(:has(#c5_X:checked)):not(:has(#c5_O:checked)) .cell-5 .lbl-x-5 { pointer-events: auto; }
+.ttt-form:not(:has(#c6_X:checked)):not(:has(#c6_O:checked)) .cell-6 .lbl-x-6 { pointer-events: auto; }
+.ttt-form:not(:has(#c7_X:checked)):not(:has(#c7_O:checked)) .cell-7 .lbl-x-7 { pointer-events: auto; }
+.ttt-form:not(:has(#c8_X:checked)):not(:has(#c8_O:checked)) .cell-8 .lbl-x-8 { pointer-events: auto; }
+
+/* ===== 7 — Detecção de vitória (16 regras: 8 linhas × 2 jogadores) ===== */
+/* Toggling de .ttt__msg em vez de ::after: aria-live ignora pseudo-elementos. */
+
+/* Linha 0-1-2 */
+.ttt-form:has(#c0_X:checked):has(#c1_X:checked):has(#c2_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c0_O:checked):has(#c1_O:checked):has(#c2_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Linha 3-4-5 */
+.ttt-form:has(#c3_X:checked):has(#c4_X:checked):has(#c5_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c3_O:checked):has(#c4_O:checked):has(#c5_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Linha 6-7-8 */
+.ttt-form:has(#c6_X:checked):has(#c7_X:checked):has(#c8_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c6_O:checked):has(#c7_O:checked):has(#c8_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Coluna 0-3-6 */
+.ttt-form:has(#c0_X:checked):has(#c3_X:checked):has(#c6_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c0_O:checked):has(#c3_O:checked):has(#c6_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Coluna 1-4-7 */
+.ttt-form:has(#c1_X:checked):has(#c4_X:checked):has(#c7_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c1_O:checked):has(#c4_O:checked):has(#c7_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Coluna 2-5-8 */
+.ttt-form:has(#c2_X:checked):has(#c5_X:checked):has(#c8_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c2_O:checked):has(#c5_O:checked):has(#c8_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Diagonal 0-4-8 */
+.ttt-form:has(#c0_X:checked):has(#c4_X:checked):has(#c8_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c0_O:checked):has(#c4_O:checked):has(#c8_O:checked) .ttt__msg--o-win { display: block; }
+
+/* Diagonal 2-4-6 */
+.ttt-form:has(#c2_X:checked):has(#c4_X:checked):has(#c6_X:checked) .ttt__msg--x-win { display: block; }
+.ttt-form:has(#c2_O:checked):has(#c4_O:checked):has(#c6_O:checked) .ttt__msg--o-win { display: block; }
+
+/* ===== 8 — Detecção de empate ===== */
+/* :where() zera a especificidade das 9 células, garantindo que as
+   regras de vitória em §7 (especificidade (3,5,1)) sempre vençam na
+   cascata, mesmo quando o tabuleiro estiver completo e cheio. */
+
+.ttt-form:where(:has(#c0_X:checked, #c0_O:checked)):where(:has(#c1_X:checked, #c1_O:checked)):where(:has(#c2_X:checked, #c2_O:checked)):where(:has(#c3_X:checked, #c3_O:checked)):where(:has(#c4_X:checked, #c4_O:checked)):where(:has(#c5_X:checked, #c5_O:checked)):where(:has(#c6_X:checked, #c6_O:checked)):where(:has(#c7_X:checked, #c7_O:checked)):where(:has(#c8_X:checked, #c8_O:checked)) .ttt__msg--draw {
+  display: block;
+}
+
+/* Vitória no 9º movimento: tabuleiro cheio + linha vencedora dispara empate E vitória.
+   Os spans são distintos → não competem na cascata. Esta regra hide-on-win usa :is()
+   (preserva especificidade) para superar o empate :where() (0,2,1) com (3,5,1). */
+.ttt-form:is(
+  :has(#c0_X:checked):has(#c1_X:checked):has(#c2_X:checked),
+  :has(#c3_X:checked):has(#c4_X:checked):has(#c5_X:checked),
+  :has(#c6_X:checked):has(#c7_X:checked):has(#c8_X:checked),
+  :has(#c0_X:checked):has(#c3_X:checked):has(#c6_X:checked),
+  :has(#c1_X:checked):has(#c4_X:checked):has(#c7_X:checked),
+  :has(#c2_X:checked):has(#c5_X:checked):has(#c8_X:checked),
+  :has(#c0_X:checked):has(#c4_X:checked):has(#c8_X:checked),
+  :has(#c2_X:checked):has(#c4_X:checked):has(#c6_X:checked),
+  :has(#c0_O:checked):has(#c1_O:checked):has(#c2_O:checked),
+  :has(#c3_O:checked):has(#c4_O:checked):has(#c5_O:checked),
+  :has(#c6_O:checked):has(#c7_O:checked):has(#c8_O:checked),
+  :has(#c0_O:checked):has(#c3_O:checked):has(#c6_O:checked),
+  :has(#c1_O:checked):has(#c4_O:checked):has(#c7_O:checked),
+  :has(#c2_O:checked):has(#c5_O:checked):has(#c8_O:checked),
+  :has(#c0_O:checked):has(#c4_O:checked):has(#c8_O:checked),
+  :has(#c2_O:checked):has(#c4_O:checked):has(#c6_O:checked)
+) .ttt__msg--draw {
+  display: none;
+}
+
+/* ===== 9 — Desabilitar labels quando jogo acabou ===== */
+
+/* Win-X: 8 combinações — bloqueia .lbl-x (jogada de X) */
+.ttt-form:has(#c0_X:checked):has(#c1_X:checked):has(#c2_X:checked) .lbl-x,
+.ttt-form:has(#c3_X:checked):has(#c4_X:checked):has(#c5_X:checked) .lbl-x,
+.ttt-form:has(#c6_X:checked):has(#c7_X:checked):has(#c8_X:checked) .lbl-x,
+.ttt-form:has(#c0_X:checked):has(#c3_X:checked):has(#c6_X:checked) .lbl-x,
+.ttt-form:has(#c1_X:checked):has(#c4_X:checked):has(#c7_X:checked) .lbl-x,
+.ttt-form:has(#c2_X:checked):has(#c5_X:checked):has(#c8_X:checked) .lbl-x,
+.ttt-form:has(#c0_X:checked):has(#c4_X:checked):has(#c8_X:checked) .lbl-x,
+.ttt-form:has(#c2_X:checked):has(#c4_X:checked):has(#c6_X:checked) .lbl-x,
+/* Win-O: 8 combinações — bloqueia .lbl-x */
+.ttt-form:has(#c0_O:checked):has(#c1_O:checked):has(#c2_O:checked) .lbl-x,
+.ttt-form:has(#c3_O:checked):has(#c4_O:checked):has(#c5_O:checked) .lbl-x,
+.ttt-form:has(#c6_O:checked):has(#c7_O:checked):has(#c8_O:checked) .lbl-x,
+.ttt-form:has(#c0_O:checked):has(#c3_O:checked):has(#c6_O:checked) .lbl-x,
+.ttt-form:has(#c1_O:checked):has(#c4_O:checked):has(#c7_O:checked) .lbl-x,
+.ttt-form:has(#c2_O:checked):has(#c5_O:checked):has(#c8_O:checked) .lbl-x,
+.ttt-form:has(#c0_O:checked):has(#c4_O:checked):has(#c8_O:checked) .lbl-x,
+.ttt-form:has(#c2_O:checked):has(#c4_O:checked):has(#c6_O:checked) .lbl-x,
+/* Empate — bloqueia .lbl-x */
+.ttt-form:where(:has(#c0_X:checked, #c0_O:checked)):where(:has(#c1_X:checked, #c1_O:checked)):where(:has(#c2_X:checked, #c2_O:checked)):where(:has(#c3_X:checked, #c3_O:checked)):where(:has(#c4_X:checked, #c4_O:checked)):where(:has(#c5_X:checked, #c5_O:checked)):where(:has(#c6_X:checked, #c6_O:checked)):where(:has(#c7_X:checked, #c7_O:checked)):where(:has(#c8_X:checked, #c8_O:checked)) .lbl-x {
+  pointer-events: none !important;
+}
+
+/* Bloqueia botão "O joga" após fim de jogo (sobrepõe pointer-events:auto da ROM) */
+/* Win-X: 8 combinações */
+.ttt-form:has(#c0_X:checked):has(#c1_X:checked):has(#c2_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c3_X:checked):has(#c4_X:checked):has(#c5_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c6_X:checked):has(#c7_X:checked):has(#c8_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c0_X:checked):has(#c3_X:checked):has(#c6_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c1_X:checked):has(#c4_X:checked):has(#c7_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c2_X:checked):has(#c5_X:checked):has(#c8_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c0_X:checked):has(#c4_X:checked):has(#c8_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c2_X:checked):has(#c4_X:checked):has(#c6_X:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+/* Win-O: 8 combinações */
+.ttt-form:has(#c0_O:checked):has(#c1_O:checked):has(#c2_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c3_O:checked):has(#c4_O:checked):has(#c5_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c6_O:checked):has(#c7_O:checked):has(#c8_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c0_O:checked):has(#c3_O:checked):has(#c6_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c1_O:checked):has(#c4_O:checked):has(#c7_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c2_O:checked):has(#c5_O:checked):has(#c8_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c0_O:checked):has(#c4_O:checked):has(#c8_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+.ttt-form:has(#c2_O:checked):has(#c4_O:checked):has(#c6_O:checked) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8),
+/* Empate */
+.ttt-form:where(:has(#c0_X:checked, #c0_O:checked)):where(:has(#c1_X:checked, #c1_O:checked)):where(:has(#c2_X:checked, #c2_O:checked)):where(:has(#c3_X:checked, #c3_O:checked)):where(:has(#c4_X:checked, #c4_O:checked)):where(:has(#c5_X:checked, #c5_O:checked)):where(:has(#c6_X:checked, #c6_O:checked)):where(:has(#c7_X:checked, #c7_O:checked)):where(:has(#c8_X:checked, #c8_O:checked)) :is(.o-move--0,.o-move--1,.o-move--2,.o-move--3,.o-move--4,.o-move--5,.o-move--6,.o-move--7,.o-move--8) {
+  pointer-events: none !important;
+}
+
+/* Cancela o pulse 'O pronto' (ttt-o-ready) quando jogo termina — sobrepõe
+   a animation aplicada pela ROM. !important garante precedência sobre as
+   2097 regras geradas. */
+.ttt-form:has(#c0_X:checked):has(#c1_X:checked):has(#c2_X:checked) .ttt__o-btn,
+.ttt-form:has(#c3_X:checked):has(#c4_X:checked):has(#c5_X:checked) .ttt__o-btn,
+.ttt-form:has(#c6_X:checked):has(#c7_X:checked):has(#c8_X:checked) .ttt__o-btn,
+.ttt-form:has(#c0_X:checked):has(#c3_X:checked):has(#c6_X:checked) .ttt__o-btn,
+.ttt-form:has(#c1_X:checked):has(#c4_X:checked):has(#c7_X:checked) .ttt__o-btn,
+.ttt-form:has(#c2_X:checked):has(#c5_X:checked):has(#c8_X:checked) .ttt__o-btn,
+.ttt-form:has(#c0_X:checked):has(#c4_X:checked):has(#c8_X:checked) .ttt__o-btn,
+.ttt-form:has(#c2_X:checked):has(#c4_X:checked):has(#c6_X:checked) .ttt__o-btn,
+.ttt-form:has(#c0_O:checked):has(#c1_O:checked):has(#c2_O:checked) .ttt__o-btn,
+.ttt-form:has(#c3_O:checked):has(#c4_O:checked):has(#c5_O:checked) .ttt__o-btn,
+.ttt-form:has(#c6_O:checked):has(#c7_O:checked):has(#c8_O:checked) .ttt__o-btn,
+.ttt-form:has(#c0_O:checked):has(#c3_O:checked):has(#c6_O:checked) .ttt__o-btn,
+.ttt-form:has(#c1_O:checked):has(#c4_O:checked):has(#c7_O:checked) .ttt__o-btn,
+.ttt-form:has(#c2_O:checked):has(#c5_O:checked):has(#c8_O:checked) .ttt__o-btn,
+.ttt-form:has(#c0_O:checked):has(#c4_O:checked):has(#c8_O:checked) .ttt__o-btn,
+.ttt-form:has(#c2_O:checked):has(#c4_O:checked):has(#c6_O:checked) .ttt__o-btn {
+  animation: none !important;
+  opacity: .55;
+}
+
+/* ===== 10 — Status ===== */
+
+.ttt__status {
+  font-family: var(--mono);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  text-align: center;
+  min-height: 1.6em;
+  padding: var(--space-3xs) 0 .6rem;
+  letter-spacing: .04em;
+}
+
+.ttt__msg { display: none; }
+.ttt__msg--x-win { color: var(--ttt-x-color); }
+.ttt__msg--o-win { color: var(--ttt-o-color); }
+
+/* ===== 11 — Botão "O joga" ===== */
+
+.ttt__o-btn {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  padding: var(--space-sm);
+  border-radius: var(--r-xl);
+  background: color-mix(in oklch, var(--ttt-o-color) 12%, var(--surface-1));
+  border: 1px solid var(--ttt-o-color);
+  color: var(--ttt-o-color);
+  font-family: var(--mono);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-align: center;
+  cursor: default;
+  user-select: none;
+  margin-bottom: var(--space-sm);
+  box-sizing: border-box;
+  transition: transform var(--dur-tap), opacity var(--dur-base);
+}
+/* Click no botão "O joga": uma das labels internas (.o-move--N) recebe :active,
+   propagamos visualmente via :has(). */
+.ttt__o-btn:has(.o-move--0:active),
+.ttt__o-btn:has(.o-move--1:active),
+.ttt__o-btn:has(.o-move--2:active),
+.ttt__o-btn:has(.o-move--3:active),
+.ttt__o-btn:has(.o-move--4:active),
+.ttt__o-btn:has(.o-move--5:active),
+.ttt__o-btn:has(.o-move--6:active),
+.ttt__o-btn:has(.o-move--7:active),
+.ttt__o-btn:has(.o-move--8:active) { transform: scale(.98); }
+
+/* Labels da IA dentro do botão: inertes por padrão, ROM ativa */
+.ttt__o-btn .o-move--0,
+.ttt__o-btn .o-move--1,
+.ttt__o-btn .o-move--2,
+.ttt__o-btn .o-move--3,
+.ttt__o-btn .o-move--4,
+.ttt__o-btn .o-move--5,
+.ttt__o-btn .o-move--6,
+.ttt__o-btn .o-move--7,
+.ttt__o-btn .o-move--8 {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+
+/* Pulse de vitória: chama atenção para a linha vencedora. */
+@keyframes ttt-win-pulse {
+  0%   { transform: scale(1);    box-shadow: inset 0 0 0 0 transparent; }
+  35%  { transform: scale(1.08); box-shadow: inset 0 0 18px 0 currentColor; }
+  100% { transform: scale(1);    box-shadow: inset 0 0 0 0 transparent; }
+}
+
+/* Pulse "O pronto": sinaliza que a IA calculou jogada e basta clicar pra confirmar.
+   Aplicado pelas 2097 regras de ttt-ai.css (cada estado da ROM aciona). */
+@keyframes ttt-o-ready {
+  0%, 100% { box-shadow: 0 0 0 0 transparent; }
+  50%      { box-shadow: 0 0 20px 1px var(--ttt-o-color); }
+}
+
+/* ===== 12 — Destaque de células vencedoras ===== */
+/* :is() agrupa as 3 células de cada linha/coluna/diagonal num selector só,
+   eliminando repetição sem alterar especificidade (classe = (0,1,0)). */
+
+/* X vence linha 0-1-2 */
+.ttt-form:has(#c0_X:checked):has(#c1_X:checked):has(#c2_X:checked) :is(.cell-0,.cell-1,.cell-2) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence linha 0-1-2 */
+.ttt-form:has(#c0_O:checked):has(#c1_O:checked):has(#c2_O:checked) :is(.cell-0,.cell-1,.cell-2) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence linha 3-4-5 */
+.ttt-form:has(#c3_X:checked):has(#c4_X:checked):has(#c5_X:checked) :is(.cell-3,.cell-4,.cell-5) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence linha 3-4-5 */
+.ttt-form:has(#c3_O:checked):has(#c4_O:checked):has(#c5_O:checked) :is(.cell-3,.cell-4,.cell-5) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence linha 6-7-8 */
+.ttt-form:has(#c6_X:checked):has(#c7_X:checked):has(#c8_X:checked) :is(.cell-6,.cell-7,.cell-8) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence linha 6-7-8 */
+.ttt-form:has(#c6_O:checked):has(#c7_O:checked):has(#c8_O:checked) :is(.cell-6,.cell-7,.cell-8) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence coluna 0-3-6 */
+.ttt-form:has(#c0_X:checked):has(#c3_X:checked):has(#c6_X:checked) :is(.cell-0,.cell-3,.cell-6) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence coluna 0-3-6 */
+.ttt-form:has(#c0_O:checked):has(#c3_O:checked):has(#c6_O:checked) :is(.cell-0,.cell-3,.cell-6) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence coluna 1-4-7 */
+.ttt-form:has(#c1_X:checked):has(#c4_X:checked):has(#c7_X:checked) :is(.cell-1,.cell-4,.cell-7) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence coluna 1-4-7 */
+.ttt-form:has(#c1_O:checked):has(#c4_O:checked):has(#c7_O:checked) :is(.cell-1,.cell-4,.cell-7) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence coluna 2-5-8 */
+.ttt-form:has(#c2_X:checked):has(#c5_X:checked):has(#c8_X:checked) :is(.cell-2,.cell-5,.cell-8) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence coluna 2-5-8 */
+.ttt-form:has(#c2_O:checked):has(#c5_O:checked):has(#c8_O:checked) :is(.cell-2,.cell-5,.cell-8) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence diagonal 0-4-8 */
+.ttt-form:has(#c0_X:checked):has(#c4_X:checked):has(#c8_X:checked) :is(.cell-0,.cell-4,.cell-8) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence diagonal 0-4-8 */
+.ttt-form:has(#c0_O:checked):has(#c4_O:checked):has(#c8_O:checked) :is(.cell-0,.cell-4,.cell-8) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* X vence diagonal 2-4-6 */
+.ttt-form:has(#c2_X:checked):has(#c4_X:checked):has(#c6_X:checked) :is(.cell-2,.cell-4,.cell-6) { background: var(--ttt-win-bg-x); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+/* O vence diagonal 2-4-6 */
+.ttt-form:has(#c2_O:checked):has(#c4_O:checked):has(#c6_O:checked) :is(.cell-2,.cell-4,.cell-6) { background: var(--ttt-win-bg-o); animation: ttt-win-pulse var(--anim-pulse) var(--ease-natural); }
+
+/* ===== 13 — Botão de reset ===== */
+/* Estilo compartilhado: ver .proj-reset em style.css */
+
+/* ===== 14 — Focus-visible ===== */
+/* :focus-within em .ttt__cell não dispara — radios cN_X são siblings de .ttt__grid,
+   não descendentes da célula. Mapeamento explícito radio→célula via ~ . */
+
+#c0_X:focus-visible ~ .ttt__grid .cell-0,
+#c1_X:focus-visible ~ .ttt__grid .cell-1,
+#c2_X:focus-visible ~ .ttt__grid .cell-2,
+#c3_X:focus-visible ~ .ttt__grid .cell-3,
+#c4_X:focus-visible ~ .ttt__grid .cell-4,
+#c5_X:focus-visible ~ .ttt__grid .cell-5,
+#c6_X:focus-visible ~ .ttt__grid .cell-6,
+#c7_X:focus-visible ~ .ttt__grid .cell-7,
+#c8_X:focus-visible ~ .ttt__grid .cell-8 {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}

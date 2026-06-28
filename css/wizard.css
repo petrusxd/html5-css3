@@ -1,0 +1,352 @@
+/* ============================================================
+   WIZARD — form wizard 3 passos com validação reativa CSS pura.
+   Navegação: radios name="wiz-step"; botão "Próximo" ativo quando
+   fieldset atual não contém :invalid; feedback via :user-invalid.
+   ============================================================ */
+
+.proj--wizard .app-wrap {
+  max-width: 760px;
+}
+
+.wiz-form {
+  margin: 0 0 var(--space-2xl);
+}
+
+.wiz-progress {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0 0 var(--space-2xl);
+}
+
+.wiz-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: var(--r-circle);
+  font-family: var(--mono);
+  font-size: var(--text-base);
+  font-weight: 700;
+  background: var(--line);
+  color: var(--txt-dim);
+  border: 2px solid var(--line);
+  transition: background var(--dur-base), color var(--dur-base), border-color var(--dur-base), box-shadow var(--dur-base);
+  flex: none;
+  position: relative;
+  z-index: 1;
+}
+
+.wiz-line {
+  flex: 1;
+  height: 2px;
+  background: var(--line);
+  max-width: 4rem;
+  min-width: 2rem;
+}
+
+/* Transição entre passos: usa @starting-style + transition-behavior:allow-discrete
+   (CSS moderno) para animar display:none → block sem JS. Browsers sem suporte
+   degradam para switch instantâneo. */
+.wiz-fs {
+  display: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity var(--dur-slow), transform var(--dur-slow), display var(--dur-slow) allow-discrete;
+}
+
+#wiz-s1:checked ~ .wizard .wiz-fs--1,
+#wiz-s2:checked ~ .wizard .wiz-fs--2,
+#wiz-s3:checked ~ .wizard .wiz-fs--3 {
+  display: block;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@starting-style {
+  #wiz-s1:checked ~ .wizard .wiz-fs--1,
+  #wiz-s2:checked ~ .wizard .wiz-fs--2,
+  #wiz-s3:checked ~ .wizard .wiz-fs--3 {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+}
+
+.wiz-legend {
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 1.4rem;
+  padding-bottom: .6rem;
+  border-bottom: 1px solid var(--line);
+  width: 100%;
+}
+
+.wiz-field {
+  margin-bottom: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.wiz-field--check {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--space-md) 1.1rem;
+}
+
+.wiz-label {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--txt);
+}
+
+.wiz-req {
+  color: var(--danger);
+  font-weight: 700;
+  margin-left: .1em;
+}
+
+.wiz-input {
+  font-family: var(--sans);
+  font-size: var(--text-md);
+  background: var(--bg-soft);
+  color: var(--txt);
+  border: 1.5px solid var(--line);
+  border-radius: var(--r-md);
+  padding: .6rem .85rem;
+  outline: none;
+  transition: border-color var(--dur-base), box-shadow var(--dur-base);
+  width: 100%;
+}
+
+.wiz-input::placeholder {
+  color: var(--txt-dim);
+  opacity: .7;
+}
+
+.wiz-input:focus {
+  border-color: var(--accent2);
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, .15);
+}
+
+.wiz-input:user-valid   { border-color: var(--on); }
+.wiz-input:user-invalid { border-color: var(--danger); }
+
+.wiz-input:user-valid:focus {
+  border-color: var(--on);
+  box-shadow: 0 0 0 3px rgba(52, 211, 153, .15);
+}
+
+.wiz-input:user-invalid:focus {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, .15);
+}
+
+.wiz-check {
+  width: 1.5rem;             /* WCAG AA: mínimo 24x24 hit area (1.5rem = 24px) */
+  height: 1.5rem;
+  flex: none;
+  margin-top: .15rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.wiz-check-label {
+  flex: 1;
+  font-size: var(--text-md);
+  color: var(--txt);
+  cursor: pointer;
+  line-height: 1.5;
+}
+
+.wiz-err {
+  display: block;
+  max-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  font-size: var(--text-sm);
+  color: var(--danger);
+  font-family: var(--mono);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--dur-base), transform var(--dur-base), max-height var(--dur-slow), margin-top var(--dur-slow);
+}
+
+.wiz-input:user-invalid ~ .wiz-err {
+  max-height: 3em;
+  margin-top: .1rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.wiz-err--check {
+  display: none;
+  width: 100%;
+  font-size: var(--text-sm);
+  color: var(--danger);
+  font-family: var(--mono);
+  margin-top: .1rem;
+}
+
+.wiz-check:user-invalid ~ .wiz-err--check { display: block; }
+
+.wiz-summary {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.wiz-summary__line {
+  font-size: var(--text-base);
+  color: var(--txt-dim);
+}
+
+.wiz-nav {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: 1.6rem;
+  flex-wrap: wrap;
+}
+
+.wiz-btn {
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 700;
+  padding: .65rem 1.4rem;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  border: 1.5px solid var(--line);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-base), border-color var(--dur-base), color var(--dur-base), opacity var(--dur-base), box-shadow var(--dur-base);
+  user-select: none;
+  line-height: 1;
+}
+
+.wiz-btn--back {
+  background: var(--bg-soft);
+  color: var(--txt-dim);
+  border-color: var(--line);
+}
+
+.wiz-btn--back:hover {
+  color: var(--txt);
+  border-color: var(--accent2);
+}
+
+.wiz-btn--next {
+  background: linear-gradient(100deg, var(--accent), var(--accent2));
+  color: var(--bg);
+  border-color: transparent;
+  pointer-events: none;
+  opacity: .4;
+  cursor: default;
+}
+
+.wiz-btn--submit {
+  background: linear-gradient(100deg, var(--on), var(--accent));
+  color: var(--bg);
+  border-color: transparent;
+  pointer-events: none;
+  opacity: .4;
+  cursor: default;
+}
+
+.wiz-btn--reset {
+  background: var(--bg-soft);
+  color: var(--danger);
+  border-color: rgba(248, 113, 113, .35);
+  font-size: var(--text-sm);
+  padding: var(--space-xs) var(--space-md);
+}
+
+.wiz-btn--reset:hover {
+  background: rgba(248, 113, 113, .08);
+  border-color: var(--danger);
+}
+
+/* --- FSM: botão "Próximo" ativo quando fieldset válido --- */
+
+#wiz-s1:checked ~ .wizard:not(:has(.wiz-fs--1 :invalid)) .wiz-btn-next--1 {
+  pointer-events: auto;
+  opacity: 1;
+  cursor: pointer;
+}
+
+#wiz-s2:checked ~ .wizard:not(:has(.wiz-fs--2 :invalid)) .wiz-btn-next--2 {
+  pointer-events: auto;
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* Enviar: exige TODO o form sem :invalid (não só o step 3) — defesa contra
+   eventual bypass da navegação sequencial. Próximo permanece per-step. */
+#wiz-s3:checked ~ .wizard:not(:has(:invalid)) .wiz-btn-submit--3 {
+  pointer-events: auto;
+  opacity: 1;
+  cursor: pointer;
+}
+
+.wiz-btn--next:hover,
+.wiz-btn--next:focus-visible {
+  box-shadow: var(--elev-soft);
+}
+
+/* Submit usa green glow específico (semântica "confirmar"), não --elev-soft. */
+.wiz-btn--submit:hover,
+.wiz-btn--submit:focus-visible {
+  box-shadow: 0 0 12px color-mix(in oklch, var(--on) 30%, transparent);
+}
+
+.wiz-actions {
+  text-align: right;
+  margin-top: var(--space-xs);
+}
+
+/* --- FSM: indicador de passo ativo --- */
+
+#wiz-s1:checked ~ .wiz-progress .wiz-dot--1,
+#wiz-s2:checked ~ .wiz-progress .wiz-dot--2,
+#wiz-s3:checked ~ .wiz-progress .wiz-dot--3 {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(94, 234, 212, .4);
+}
+
+#wiz-s2:checked ~ .wiz-progress .wiz-dot--1,
+#wiz-s3:checked ~ .wiz-progress .wiz-dot--1,
+#wiz-s3:checked ~ .wiz-progress .wiz-dot--2 {
+  background: var(--on);
+  color: var(--bg);
+  border-color: var(--on);
+  box-shadow: 0 0 8px rgba(52, 211, 153, .3);
+}
+
+#wiz-s2:checked ~ .wiz-progress .wiz-line:first-of-type,
+#wiz-s3:checked ~ .wiz-progress .wiz-line:first-of-type {
+  background: var(--on);
+}
+
+#wiz-s3:checked ~ .wiz-progress .wiz-line:last-of-type {
+  background: var(--on);
+}
+

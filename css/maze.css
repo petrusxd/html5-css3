@@ -1,0 +1,216 @@
+/* ============================================================
+   MAZE — labirinto 7×7 com caminhos ótimos tabelados.
+   Estado: name="maze-mode" (mode-src|mode-dst),
+           name="src" (src_N), name="dst" (dst_N).
+   Mecanismo: FSM de modo ativa labels sobrepostos por
+   pointer-events; ROM em css/maze-paths.css projeta caminhos.
+   ============================================================ */
+
+/* ===== 1 — Custom properties específicas do MAZE ===== */
+
+:root {
+  --maze-cell-sz:   clamp(32px, 9vw, 44px);
+  --maze-wall:      #080c10;
+  --maze-floor:     #141e2b;
+  --maze-border:    #1f2f42;
+  --maze-path:      color-mix(in oklch, var(--accent) 28%, #141e2b);
+  --maze-src:       #22c55e;
+  --maze-dst:       #ef4444;
+  --maze-src-dim:   color-mix(in oklch, #22c55e 15%, var(--surface-1));
+  --maze-dst-dim:   color-mix(in oklch, #ef4444 15%, var(--surface-1));
+}
+
+/* ===== 2 — Container ===== */
+
+.maze-form { margin: 0; }
+
+.maze {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3xl);
+  padding: var(--space-lg);
+  max-width: 400px;
+  margin: 0 auto;
+  font-family: var(--mono);
+  box-shadow: var(--elev-card);
+}
+
+/* ===== 3 — Barra de modo (Origem / Destino) e stat ===== */
+
+.maze-mode-ctrl {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-sm);
+}
+
+.maze-mode-btn {
+  flex: 1;
+  text-align: center;
+  padding: .45rem .6rem;
+  border-radius: var(--r-md);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--txt-dim);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: .07em;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--dur-fast), color var(--dur-fast), background var(--dur-fast), transform var(--dur-tap);
+}
+.maze-mode-btn:active { transform: scale(.96); }
+
+/* Destaque do modo ativo */
+.maze-form:has(#mode-src:checked) .maze-mode-btn--src {
+  background: var(--maze-src-dim);
+  color: var(--maze-src);
+  border-color: var(--maze-src);
+}
+.maze-form:has(#mode-dst:checked) .maze-mode-btn--dst {
+  background: var(--maze-dst-dim);
+  color: var(--maze-dst);
+  border-color: var(--maze-dst);
+}
+
+/* Stat (preenchida pela ROM via ::after) */
+.maze-stat {
+  flex: 2;
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--txt-dim);
+  min-height: 1.3em;
+  letter-spacing: .04em;
+}
+.maze-stat::after { content: ""; }
+
+/* ===== 4 — Grid 7×7 ===== */
+
+.maze-grid {
+  display: grid;
+  grid-template-columns: repeat(7, var(--maze-cell-sz));
+  grid-template-rows:    repeat(7, var(--maze-cell-sz));
+  gap: 2px;
+  background: var(--maze-border);
+  border: 2px solid var(--maze-border);
+  border-radius: var(--r-sm);
+  margin-bottom: var(--space-sm);
+}
+
+/* ===== 5 — Células ===== */
+
+.cell {
+  background: var(--maze-floor);
+  position: relative;
+  overflow: hidden;
+  transition: background var(--dur-fast);
+}
+
+.cell--wall {
+  background: var(--maze-wall);
+  border-radius: 1px;
+}
+
+/* ===== 6 — Labels sobrepostos (src e dst) ===== */
+
+.cell-lbl {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Modo src: labels src ficam clicáveis nas células de piso */
+.maze-form:has(#mode-src:checked) .cell:not(.cell--wall) .cell-lbl--src {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* Modo dst: labels dst ficam clicáveis */
+.maze-form:has(#mode-dst:checked) .cell:not(.cell--wall) .cell-lbl--dst {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+/* Hover preview: tint da cor do modo ativo enquanto cursor está sobre a célula. */
+.maze-form:has(#mode-src:checked) .cell:not(.cell--wall):has(.cell-lbl--src:hover) {
+  background: var(--maze-src-dim);
+}
+.maze-form:has(#mode-dst:checked) .cell:not(.cell--wall):has(.cell-lbl--dst:hover) {
+  background: var(--maze-dst-dim);
+}
+
+/* ===== 7 — Mensagens de instrução e aviso ===== */
+
+.maze-hint-msg {
+  font-size: var(--text-xs);
+  color: var(--txt-dim);
+  text-align: center;
+  padding: .3rem 0;
+  min-height: 1.4em;
+  transition: opacity var(--dur-quick);
+}
+
+.maze-hint-msg::after {
+  content: "Clique Origem → célula → Destino → célula";
+}
+
+.maze-form:has([name="src"]:checked) .maze-hint-msg::after {
+  content: "Origem marcada — escolha Destino e clique uma célula";
+}
+
+.maze-form:has([name="src"]:checked):has([name="dst"]:checked) .maze-hint-msg {
+  display: none;
+}
+
+/* Aviso de par não tabelado — sempre em layout (max-height:0 + opacity:0 quando
+   inativo), evita CLS e permite fade-in suave em vez de display switch. */
+.maze-no-path {
+  display: block;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  padding: 0;
+  font-size: var(--text-xs);
+  color: var(--txt-dim);
+  text-align: center;
+  transition: max-height var(--dur-slow), opacity var(--dur-base), padding var(--dur-slow);
+}
+/* INVARIANTE DE CASCATA: esta regra usa seletores de atributo ([name="src"],[name="dst"])
+   com especificidade (0,4,0). As regras da ROM em maze-paths.css que ocultam .maze-no-path
+   usam seletores ID (#src_N, #dst_N) com especificidade >= (2,2,0) — sempre vencem.
+   NÃO alterar o gerador da ROM para usar seletores de atributo sem revisar esta dependência. */
+.maze-form:has([name="src"]:checked):has([name="dst"]:checked) .maze-no-path {
+  max-height: 3em;
+  opacity: 1;
+  padding: .3rem 0;
+}
+.maze-no-path::after {
+  content: "Par não tabelado — use os pares recomendados na seção de dicas.";
+}
+
+/* ===== 8 — Botão de reset ===== */
+
+.maze-reset {
+  display: block;
+  width: 100%;
+  padding: .65rem;
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--txt-dim);
+  font-family: var(--mono);
+  font-size: var(--text-md);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-tap);
+}
+.maze-reset:hover  { color: var(--danger); border-color: var(--danger); }
+.maze-reset:active { transform: scale(.98); }
+
+/* ===== 9 — Focus-visible nos controles interativos ===== */
+
+#mode-src:focus-visible ~ .maze .maze-mode-btn--src,
+#mode-dst:focus-visible ~ .maze .maze-mode-btn--dst {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

@@ -1,0 +1,408 @@
+@charset "UTF-8";
+/* ============================================================
+   MAZE -- ROM de caminhos otimos do labirinto 7x7.
+   Para cada par (origem, destino) enumerado: destaca o caminho
+   minimo correspondente e exibe seu comprimento em .maze-stat.
+   Arquivo derivado mecanicamente; nao edite a mao.
+   ============================================================ */
+
+/* ===== 1 -- Destaque standalone: celula de origem ===== */
+
+.maze-form:has(#src_0:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_1:checked) .cell-1 { background: var(--maze-src); }
+.maze-form:has(#src_2:checked) .cell-2 { background: var(--maze-src); }
+.maze-form:has(#src_4:checked) .cell-4 { background: var(--maze-src); }
+.maze-form:has(#src_5:checked) .cell-5 { background: var(--maze-src); }
+.maze-form:has(#src_6:checked) .cell-6 { background: var(--maze-src); }
+.maze-form:has(#src_9:checked) .cell-9 { background: var(--maze-src); }
+.maze-form:has(#src_11:checked) .cell-11 { background: var(--maze-src); }
+.maze-form:has(#src_13:checked) .cell-13 { background: var(--maze-src); }
+.maze-form:has(#src_14:checked) .cell-14 { background: var(--maze-src); }
+.maze-form:has(#src_15:checked) .cell-15 { background: var(--maze-src); }
+.maze-form:has(#src_16:checked) .cell-16 { background: var(--maze-src); }
+.maze-form:has(#src_17:checked) .cell-17 { background: var(--maze-src); }
+.maze-form:has(#src_18:checked) .cell-18 { background: var(--maze-src); }
+.maze-form:has(#src_20:checked) .cell-20 { background: var(--maze-src); }
+.maze-form:has(#src_21:checked) .cell-21 { background: var(--maze-src); }
+.maze-form:has(#src_25:checked) .cell-25 { background: var(--maze-src); }
+.maze-form:has(#src_27:checked) .cell-27 { background: var(--maze-src); }
+.maze-form:has(#src_28:checked) .cell-28 { background: var(--maze-src); }
+.maze-form:has(#src_30:checked) .cell-30 { background: var(--maze-src); }
+.maze-form:has(#src_31:checked) .cell-31 { background: var(--maze-src); }
+.maze-form:has(#src_32:checked) .cell-32 { background: var(--maze-src); }
+.maze-form:has(#src_33:checked) .cell-33 { background: var(--maze-src); }
+.maze-form:has(#src_34:checked) .cell-34 { background: var(--maze-src); }
+.maze-form:has(#src_35:checked) .cell-35 { background: var(--maze-src); }
+.maze-form:has(#src_37:checked) .cell-37 { background: var(--maze-src); }
+.maze-form:has(#src_41:checked) .cell-41 { background: var(--maze-src); }
+.maze-form:has(#src_42:checked) .cell-42 { background: var(--maze-src); }
+.maze-form:has(#src_43:checked) .cell-43 { background: var(--maze-src); }
+.maze-form:has(#src_44:checked) .cell-44 { background: var(--maze-src); }
+.maze-form:has(#src_46:checked) .cell-46 { background: var(--maze-src); }
+.maze-form:has(#src_47:checked) .cell-47 { background: var(--maze-src); }
+.maze-form:has(#src_48:checked) .cell-48 { background: var(--maze-src); }
+
+/* ===== 2 -- Destaque standalone: celula de destino ===== */
+
+.maze-form:has(#dst_0:checked) .cell-0 { background: var(--maze-dst); }
+.maze-form:has(#dst_1:checked) .cell-1 { background: var(--maze-dst); }
+.maze-form:has(#dst_2:checked) .cell-2 { background: var(--maze-dst); }
+.maze-form:has(#dst_4:checked) .cell-4 { background: var(--maze-dst); }
+.maze-form:has(#dst_5:checked) .cell-5 { background: var(--maze-dst); }
+.maze-form:has(#dst_6:checked) .cell-6 { background: var(--maze-dst); }
+.maze-form:has(#dst_9:checked) .cell-9 { background: var(--maze-dst); }
+.maze-form:has(#dst_11:checked) .cell-11 { background: var(--maze-dst); }
+.maze-form:has(#dst_13:checked) .cell-13 { background: var(--maze-dst); }
+.maze-form:has(#dst_14:checked) .cell-14 { background: var(--maze-dst); }
+.maze-form:has(#dst_15:checked) .cell-15 { background: var(--maze-dst); }
+.maze-form:has(#dst_16:checked) .cell-16 { background: var(--maze-dst); }
+.maze-form:has(#dst_17:checked) .cell-17 { background: var(--maze-dst); }
+.maze-form:has(#dst_18:checked) .cell-18 { background: var(--maze-dst); }
+.maze-form:has(#dst_20:checked) .cell-20 { background: var(--maze-dst); }
+.maze-form:has(#dst_21:checked) .cell-21 { background: var(--maze-dst); }
+.maze-form:has(#dst_25:checked) .cell-25 { background: var(--maze-dst); }
+.maze-form:has(#dst_27:checked) .cell-27 { background: var(--maze-dst); }
+.maze-form:has(#dst_28:checked) .cell-28 { background: var(--maze-dst); }
+.maze-form:has(#dst_30:checked) .cell-30 { background: var(--maze-dst); }
+.maze-form:has(#dst_31:checked) .cell-31 { background: var(--maze-dst); }
+.maze-form:has(#dst_32:checked) .cell-32 { background: var(--maze-dst); }
+.maze-form:has(#dst_33:checked) .cell-33 { background: var(--maze-dst); }
+.maze-form:has(#dst_34:checked) .cell-34 { background: var(--maze-dst); }
+.maze-form:has(#dst_35:checked) .cell-35 { background: var(--maze-dst); }
+.maze-form:has(#dst_37:checked) .cell-37 { background: var(--maze-dst); }
+.maze-form:has(#dst_41:checked) .cell-41 { background: var(--maze-dst); }
+.maze-form:has(#dst_42:checked) .cell-42 { background: var(--maze-dst); }
+.maze-form:has(#dst_43:checked) .cell-43 { background: var(--maze-dst); }
+.maze-form:has(#dst_44:checked) .cell-44 { background: var(--maze-dst); }
+.maze-form:has(#dst_46:checked) .cell-46 { background: var(--maze-dst); }
+.maze-form:has(#dst_47:checked) .cell-47 { background: var(--maze-dst); }
+.maze-form:has(#dst_48:checked) .cell-48 { background: var(--maze-dst); }
+
+/* ===== 3 -- ROM de caminhos otimos (25 pares) ===== */
+
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-17,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-18,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-25,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-32,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-33,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-34,
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-41 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .cell-48 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_48:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-17,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-18,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-11,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-4,
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-5 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .cell-6 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .maze-stat::after { content: "11 celulas · 10 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_6:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-15,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-14,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-21,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-28,
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-35 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .cell-42 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .maze-stat::after { content: "11 celulas · 10 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_42:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-13,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-20,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-27,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-34,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-33,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-32,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-31,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-30,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-37,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-44,
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-43 { background: var(--maze-path); }
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-6 { background: var(--maze-src); }
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .cell-42 { background: var(--maze-dst); }
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_6:checked):has(#dst_42:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-43,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-44,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-37,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-30,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-31,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-32,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-33,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-34,
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-41 { background: var(--maze-path); }
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-42 { background: var(--maze-src); }
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .cell-48 { background: var(--maze-dst); }
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .maze-stat::after { content: "11 celulas · 10 passos"; }
+.maze-form:has(#src_42:checked):has(#dst_48:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-17,
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-18,
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-25 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .cell-32 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .maze-stat::after { content: "9 celulas · 8 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_32:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-13,
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-20,
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-27,
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-34,
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-33 { background: var(--maze-path); }
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-6 { background: var(--maze-src); }
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .cell-32 { background: var(--maze-dst); }
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .maze-stat::after { content: "7 celulas · 6 passos"; }
+.maze-form:has(#src_6:checked):has(#dst_32:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-43,
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-44,
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-37,
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-30,
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-31 { background: var(--maze-path); }
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-42 { background: var(--maze-src); }
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .cell-32 { background: var(--maze-dst); }
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .maze-stat::after { content: "7 celulas · 6 passos"; }
+.maze-form:has(#src_42:checked):has(#dst_32:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .cell-41,
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .cell-34,
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .cell-33 { background: var(--maze-path); }
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .cell-48 { background: var(--maze-src); }
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .cell-32 { background: var(--maze-dst); }
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .maze-stat::after { content: "5 celulas · 4 passos"; }
+.maze-form:has(#src_48:checked):has(#dst_32:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-17,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-18,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-25,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-32,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-33,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-34,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-41,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-48,
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-47 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .cell-46 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .maze-stat::after { content: "15 celulas · 14 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_46:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-13,
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-20,
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-27,
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-34,
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-41,
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-48,
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-47 { background: var(--maze-path); }
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-6 { background: var(--maze-src); }
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .cell-46 { background: var(--maze-dst); }
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .maze-stat::after { content: "9 celulas · 8 passos"; }
+.maze-form:has(#src_6:checked):has(#dst_46:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_46:checked):has(#dst_48:checked) .cell-47 { background: var(--maze-path); }
+.maze-form:has(#src_46:checked):has(#dst_48:checked) .cell-46 { background: var(--maze-src); }
+.maze-form:has(#src_46:checked):has(#dst_48:checked) .cell-48 { background: var(--maze-dst); }
+.maze-form:has(#src_46:checked):has(#dst_48:checked) .maze-stat::after { content: "3 celulas · 2 passos"; }
+.maze-form:has(#src_46:checked):has(#dst_48:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-17,
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-18 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .cell-25 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .maze-stat::after { content: "8 celulas · 7 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_25:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-13,
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-20,
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-27,
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-34,
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-41 { background: var(--maze-path); }
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-6 { background: var(--maze-src); }
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .cell-48 { background: var(--maze-dst); }
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .maze-stat::after { content: "7 celulas · 6 passos"; }
+.maze-form:has(#src_6:checked):has(#dst_48:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-41,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-34,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-33,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-32,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-25,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-18,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-17,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-16,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-9,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-2,
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-1 { background: var(--maze-path); }
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-48 { background: var(--maze-src); }
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .cell-0 { background: var(--maze-dst); }
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_48:checked):has(#dst_0:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-1,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-2,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-9,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-16,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-15,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-14,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-21,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-28,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-35,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-42,
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-43 { background: var(--maze-path); }
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-0 { background: var(--maze-src); }
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .cell-44 { background: var(--maze-dst); }
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_0:checked):has(#dst_44:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-2,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-9,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-16,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-17,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-18,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-25,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-32,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-33,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-34,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-41,
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-48 { background: var(--maze-path); }
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-1 { background: var(--maze-src); }
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .cell-47 { background: var(--maze-dst); }
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_1:checked):has(#dst_47:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-14,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-15,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-16,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-17,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-18,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-25,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-32,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-33,
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-34 { background: var(--maze-path); }
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-21 { background: var(--maze-src); }
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .cell-41 { background: var(--maze-dst); }
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .maze-stat::after { content: "11 celulas · 10 passos"; }
+.maze-form:has(#src_21:checked):has(#dst_41:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-15,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-16,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-17,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-18,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-25,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-32,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-33,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-34,
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-41 { background: var(--maze-path); }
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-14 { background: var(--maze-src); }
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .cell-48 { background: var(--maze-dst); }
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .maze-stat::after { content: "11 celulas · 10 passos"; }
+.maze-form:has(#src_14:checked):has(#dst_48:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .cell-16,
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .cell-17,
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .cell-18,
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .cell-25 { background: var(--maze-path); }
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .cell-9 { background: var(--maze-src); }
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .cell-32 { background: var(--maze-dst); }
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .maze-stat::after { content: "6 celulas · 5 passos"; }
+.maze-form:has(#src_9:checked):has(#dst_32:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-6,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-5,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-4,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-11,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-18,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-17,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-16,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-15,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-14,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-21,
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-28 { background: var(--maze-path); }
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-13 { background: var(--maze-src); }
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .cell-35 { background: var(--maze-dst); }
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_13:checked):has(#dst_35:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-13,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-6,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-5,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-4,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-11,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-18,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-17,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-16,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-15,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-14,
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-21 { background: var(--maze-path); }
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-20 { background: var(--maze-src); }
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .cell-28 { background: var(--maze-dst); }
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .maze-stat::after { content: "13 celulas · 12 passos"; }
+.maze-form:has(#src_20:checked):has(#dst_28:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-11,
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-18,
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-25,
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-32,
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-33,
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-34 { background: var(--maze-path); }
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-4 { background: var(--maze-src); }
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .cell-41 { background: var(--maze-dst); }
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .maze-stat::after { content: "8 celulas · 7 passos"; }
+.maze-form:has(#src_4:checked):has(#dst_41:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-4,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-11,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-18,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-25,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-32,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-31,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-30,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-37,
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-44 { background: var(--maze-path); }
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-5 { background: var(--maze-src); }
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .cell-43 { background: var(--maze-dst); }
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .maze-stat::after { content: "11 celulas · 10 passos"; }
+.maze-form:has(#src_5:checked):has(#dst_43:checked) .maze-no-path { display: none; }
+
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-34,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-33,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-32,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-31,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-30,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-37,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-44,
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-43 { background: var(--maze-path); }
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-27 { background: var(--maze-src); }
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .cell-42 { background: var(--maze-dst); }
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .maze-stat::after { content: "10 celulas · 9 passos"; }
+.maze-form:has(#src_27:checked):has(#dst_42:checked) .maze-no-path { display: none; }
+

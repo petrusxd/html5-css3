@@ -1,0 +1,203 @@
+/* ============================================================
+   BF-MINI — interpretador de subconjunto BF, fita de 4 células.
+   Estado: name="bf-step" (radios bf_step_0..bf_step_8).
+   Trace de execução tabelado em css/bf-trace.css.
+   Mecanismo: .bf-form:has(#bf_step_k:checked):not(:has(#bf_step_{k+1}:checked))
+   seleciona o estado atual; ::after exibe IP e valores da fita.
+   ============================================================ */
+
+/* ===== 1 — Custom properties específicas do BF-MINI ===== */
+
+:root {
+  --bf-cell-bg: var(--surface-2);
+  --bf-active:  color-mix(in oklch, var(--accent) 15%, var(--surface-2));
+  --bf-cell-sz: 64px;
+}
+
+/* ===== 2 — Container e wrapper ===== */
+
+.bf-form { margin: 0; }
+
+.bf {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3xl);
+  padding: 1.4rem;
+  box-shadow: var(--elev-card);
+  max-width: 480px;
+  margin: 0 auto;
+  font-family: var(--mono);
+}
+
+/* ===== 3 — Registrador IP ===== */
+
+.bf__regs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.bf__reg-block {
+  background: var(--bf-cell-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: .9rem;
+  text-align: center;
+}
+
+.bf__reg-label {
+  font-size: var(--text-xs);
+  color: var(--txt-dim);
+  letter-spacing: .1em;
+}
+
+.bf__reg-val {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--accent);
+  margin-top: var(--space-3xs);
+  min-height: 1.8rem;
+}
+
+/* default "—" antes de qualquer step; trace ROM sobrescreve (0..7 ou "FIM") */
+.reg-ip::after { content: "—"; }
+
+/* ===== 4 — Listagem do programa ===== */
+
+.bf__prog {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-md);
+  line-height: 1.85;
+  margin-bottom: var(--space-md);
+}
+
+.bf__prog ol {
+  list-style: none;
+  counter-reset: ip-addr;
+  margin: 0;
+  padding: 0;
+}
+
+.bf__prog li {
+  counter-increment: ip-addr;
+  color: var(--txt-dim);
+  transition: color var(--dur-quick);
+}
+
+.bf__prog li::before {
+  content: counter(ip-addr, decimal-leading-zero) ":  ";
+  color: var(--accent2);
+  font-size: var(--text-sm);
+}
+
+/* ===== 5 — Fita (tape): 4 células ===== */
+
+.bf__tape {
+  display: grid;
+  grid-template-columns: repeat(4, var(--bf-cell-sz));
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.bf-cell {
+  background: var(--bf-cell-bg);
+  border: 2px solid var(--line);
+  border-radius: var(--r-md);
+  width: var(--bf-cell-sz);
+  height: var(--bf-cell-sz);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: background var(--dur-quick), border-color var(--dur-quick);
+  overflow: hidden;
+}
+
+.bf-cell__idx {
+  font-size: .6rem;
+  color: var(--txt-dim);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.bf-cell__val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+/* default "0"; trace ROM sobrescreve via .bf-cell--j .bf-cell__val::after */
+.bf-cell__val::after { content: "0"; }
+
+/* ===== 6 — Controles: botão ▶ e reset ===== */
+
+.bf__ctrl {
+  display: flex;
+  gap: .6rem;
+}
+
+.bf__btn-step,
+.bf__btn-reset {
+  flex: 1;
+  position: relative;
+  font-family: var(--mono);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-align: center;
+  padding: .9rem 0;
+  border-radius: var(--r-xl);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--txt);
+  user-select: none;
+  cursor: pointer;
+  transition: border-color var(--dur-quick), box-shadow var(--dur-quick), opacity var(--dur-base), transform var(--dur-tap);
+}
+
+.bf__btn-step:hover  { border-color: var(--accent); box-shadow: var(--elev-soft); }
+.bf__btn-step:active { transform: scale(.97); }
+/* FIM do programa: btn-step inerte → dim para sinalizar. */
+.bf-form:has(#bf_step_8:checked) .bf__btn-step { opacity: .35; cursor: not-allowed; }
+
+.bf__btn-reset {
+  color: var(--txt-dim);
+}
+.bf__btn-reset:active { transform: scale(.97); }
+
+.bf__btn-reset:hover {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+/* ===== 7 — Labels sobrepostos do botão ▶ ===== */
+
+.lbl-bf-step {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-xl);
+  cursor: pointer;
+  pointer-events: none;
+}
+
+/* ===== 8 — FSM do botão ▶ ===== */
+
+.bf-form:not(:has([name="bf-step"]:checked)) .lbl-bf-step-0 {
+  pointer-events: auto;
+}
+
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .lbl-bf-step-1 { pointer-events: auto; }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .lbl-bf-step-2 { pointer-events: auto; }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .lbl-bf-step-3 { pointer-events: auto; }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .lbl-bf-step-4 { pointer-events: auto; }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .lbl-bf-step-5 { pointer-events: auto; }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .lbl-bf-step-6 { pointer-events: auto; }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .lbl-bf-step-7 { pointer-events: auto; }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .lbl-bf-step-8 { pointer-events: auto; }
+/* bf_step_8 = FIM: nenhum lbl-bf-step ativo → ▶ inerte naturalmente. */

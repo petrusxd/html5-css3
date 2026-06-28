@@ -1,0 +1,386 @@
+@charset "UTF-8";
+/* ============================================================
+   Timer POMODORO — ROM de display de minutos.
+   Cada span é visível durante sua janela de 1 minuto via
+   @keyframes individual controlado por animation-play-state.
+   Arquivo derivado mecanicamente; não edite à mão.
+   ============================================================ */
+
+/* --- Work mode: 26 spans (25 min a 0 min) --- */
+@keyframes show-work-25 {
+  0.0000%  { opacity: 1; }
+  4.0000%  { opacity: 1; }
+  4.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-25 {
+  animation: show-work-25 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-24 {
+  4.0000%  { opacity: 0; }
+  4.0001%  { opacity: 1; }
+  8.0000%  { opacity: 1; }
+  8.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-24 {
+  animation: show-work-24 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-23 {
+  8.0000%  { opacity: 0; }
+  8.0001%  { opacity: 1; }
+  12.0000%  { opacity: 1; }
+  12.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-23 {
+  animation: show-work-23 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-22 {
+  12.0000%  { opacity: 0; }
+  12.0001%  { opacity: 1; }
+  16.0000%  { opacity: 1; }
+  16.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-22 {
+  animation: show-work-22 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-21 {
+  16.0000%  { opacity: 0; }
+  16.0001%  { opacity: 1; }
+  20.0000%  { opacity: 1; }
+  20.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-21 {
+  animation: show-work-21 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-20 {
+  20.0000%  { opacity: 0; }
+  20.0001%  { opacity: 1; }
+  24.0000%  { opacity: 1; }
+  24.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-20 {
+  animation: show-work-20 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-19 {
+  24.0000%  { opacity: 0; }
+  24.0001%  { opacity: 1; }
+  28.0000%  { opacity: 1; }
+  28.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-19 {
+  animation: show-work-19 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-18 {
+  28.0000%  { opacity: 0; }
+  28.0001%  { opacity: 1; }
+  32.0000%  { opacity: 1; }
+  32.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-18 {
+  animation: show-work-18 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-17 {
+  32.0000%  { opacity: 0; }
+  32.0001%  { opacity: 1; }
+  36.0000%  { opacity: 1; }
+  36.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-17 {
+  animation: show-work-17 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-16 {
+  36.0000%  { opacity: 0; }
+  36.0001%  { opacity: 1; }
+  40.0000%  { opacity: 1; }
+  40.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-16 {
+  animation: show-work-16 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-15 {
+  40.0000%  { opacity: 0; }
+  40.0001%  { opacity: 1; }
+  44.0000%  { opacity: 1; }
+  44.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-15 {
+  animation: show-work-15 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-14 {
+  44.0000%  { opacity: 0; }
+  44.0001%  { opacity: 1; }
+  48.0000%  { opacity: 1; }
+  48.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-14 {
+  animation: show-work-14 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-13 {
+  48.0000%  { opacity: 0; }
+  48.0001%  { opacity: 1; }
+  52.0000%  { opacity: 1; }
+  52.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-13 {
+  animation: show-work-13 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-12 {
+  52.0000%  { opacity: 0; }
+  52.0001%  { opacity: 1; }
+  56.0000%  { opacity: 1; }
+  56.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-12 {
+  animation: show-work-12 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-11 {
+  56.0000%  { opacity: 0; }
+  56.0001%  { opacity: 1; }
+  60.0000%  { opacity: 1; }
+  60.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-11 {
+  animation: show-work-11 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-10 {
+  60.0000%  { opacity: 0; }
+  60.0001%  { opacity: 1; }
+  64.0000%  { opacity: 1; }
+  64.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-10 {
+  animation: show-work-10 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-09 {
+  64.0000%  { opacity: 0; }
+  64.0001%  { opacity: 1; }
+  68.0000%  { opacity: 1; }
+  68.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-9 {
+  animation: show-work-09 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-08 {
+  68.0000%  { opacity: 0; }
+  68.0001%  { opacity: 1; }
+  72.0000%  { opacity: 1; }
+  72.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-8 {
+  animation: show-work-08 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-07 {
+  72.0000%  { opacity: 0; }
+  72.0001%  { opacity: 1; }
+  76.0000%  { opacity: 1; }
+  76.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-7 {
+  animation: show-work-07 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-06 {
+  76.0000%  { opacity: 0; }
+  76.0001%  { opacity: 1; }
+  80.0000%  { opacity: 1; }
+  80.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-6 {
+  animation: show-work-06 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-05 {
+  80.0000%  { opacity: 0; }
+  80.0001%  { opacity: 1; }
+  84.0000%  { opacity: 1; }
+  84.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-5 {
+  animation: show-work-05 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-04 {
+  84.0000%  { opacity: 0; }
+  84.0001%  { opacity: 1; }
+  88.0000%  { opacity: 1; }
+  88.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-4 {
+  animation: show-work-04 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-03 {
+  88.0000%  { opacity: 0; }
+  88.0001%  { opacity: 1; }
+  92.0000%  { opacity: 1; }
+  92.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-3 {
+  animation: show-work-03 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-02 {
+  92.0000%  { opacity: 0; }
+  92.0001%  { opacity: 1; }
+  96.0000%  { opacity: 1; }
+  96.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-w-2 {
+  animation: show-work-02 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-01 {
+  96.0000%  { opacity: 0; }
+  96.0001%  { opacity: 1; }
+  99.9999%  { opacity: 1; }
+  100.0000% { opacity: 0; }
+}
+.min-w-1 {
+  animation: show-work-01 1500s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-work-00 {
+  0.0000%   { opacity: 0; }
+  99.9999%  { opacity: 0; }
+  100.0000% { opacity: 1; }
+}
+.min-w-0 {
+  animation: show-work-00 1500s linear both;
+  animation-play-state: paused;
+}
+
+/* --- Break mode: 6 spans (5 min a 0 min) --- */
+@keyframes show-break-05 {
+  0.0000%  { opacity: 1; }
+  20.0000%  { opacity: 1; }
+  20.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-b-5 {
+  animation: show-break-05 300s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-break-04 {
+  20.0000%  { opacity: 0; }
+  20.0001%  { opacity: 1; }
+  40.0000%  { opacity: 1; }
+  40.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-b-4 {
+  animation: show-break-04 300s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-break-03 {
+  40.0000%  { opacity: 0; }
+  40.0001%  { opacity: 1; }
+  60.0000%  { opacity: 1; }
+  60.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-b-3 {
+  animation: show-break-03 300s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-break-02 {
+  60.0000%  { opacity: 0; }
+  60.0001%  { opacity: 1; }
+  80.0000%  { opacity: 1; }
+  80.0001%  { opacity: 0; }
+  100.0000%  { opacity: 0; }
+}
+.min-b-2 {
+  animation: show-break-02 300s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-break-01 {
+  80.0000%  { opacity: 0; }
+  80.0001%  { opacity: 1; }
+  99.9999%  { opacity: 1; }
+  100.0000% { opacity: 0; }
+}
+.min-b-1 {
+  animation: show-break-01 300s linear both;
+  animation-play-state: paused;
+}
+
+@keyframes show-break-00 {
+  0.0000%   { opacity: 0; }
+  99.9999%  { opacity: 0; }
+  100.0000% { opacity: 1; }
+}
+.min-b-0 {
+  animation: show-break-00 300s linear both;
+  animation-play-state: paused;
+}
+

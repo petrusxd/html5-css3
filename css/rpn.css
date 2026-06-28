@@ -1,0 +1,283 @@
+/* ============================================================
+   STACK-RPN — calculadora RPN de pilha com 2 registradores.
+   Estado: name="rpn-mode" (rpn-mode-a|rpn-mode-b),
+           name="rpn-a"    (rpn-a-empty|rpn-a-0..rpn-a-9),
+           name="rpn-b"    (rpn-b-empty|rpn-b-0..rpn-b-9),
+           name="rpn-op"   (rpn-op-none|rpn-plus|rpn-minus|rpn-times).
+   Mecanismo: FSM de modo ativa labels sobrepostos via pointer-events;
+   ROM em css/rpn-ops.css projeta S1 e o resultado em S0.
+   ============================================================ */
+
+/* ===== 1 — Custom properties específicas do STACK-RPN ===== */
+
+:root {
+  --rpn-key-sz:    clamp(2.4rem, 7vw, 3rem);
+  --rpn-stack-ht:  2.8rem;
+  --rpn-active:    var(--accent);
+  --rpn-active-dim: color-mix(in oklch, var(--accent) 15%, var(--surface-1));
+}
+
+/* ===== 2 — Container ===== */
+
+.rpn-form { margin: 0; }
+
+/* Aparência do painel: ver .proj-panel em style.css */
+
+/* ===== 3 — Display da pilha ===== */
+
+.rpn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--space-sm);
+}
+
+.rpn-stack-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: var(--rpn-stack-ht);
+  padding: var(--space-3xs) .6rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  font-size: var(--text-xl);
+  overflow: hidden;
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+
+.rpn-stack-lbl {
+  width: 1.6rem;
+  font-size: var(--text-xs);
+  color: var(--txt-dim);
+  letter-spacing: .06em;
+}
+
+.rpn-stack-val {
+  flex: 1;
+  text-align: right;
+  letter-spacing: .04em;
+}
+
+/* Padrão de S1: ∅ — a ROM sobrescreve quando rpn-a está selecionado */
+.rpn-s1-display::after { content: "∅"; color: var(--txt-dim); }
+
+/* Padrão de S0: ∅ — echo local de rpn-b */
+.rpn-s0-display::after { content: "∅"; color: var(--txt-dim); }
+
+/* Resultado: oculto por padrão; ROM ativa quando op+a+b definidos */
+.rpn-result { display: none; }
+.rpn-result::after { content: ""; }
+
+/* ===== 4 — Linha ativa: destaca qual registrador está sendo alimentado ===== */
+
+.rpn-form:has(#rpn-mode-a:checked) .rpn-row--s1 {
+  background: var(--rpn-active-dim);
+  border-color: var(--rpn-active);
+}
+
+.rpn-form:has(#rpn-mode-b:checked) .rpn-row--s0 {
+  background: var(--rpn-active-dim);
+  border-color: var(--rpn-active);
+}
+
+/* ===== 5 — Echo de S0 (rpn-b → dígito visível) ===== */
+
+/* S1 é responsabilidade da ROM (depende da operação selecionada). */
+.rpn-form:has(#rpn-b-0:checked) .rpn-s0-display::after { content: "0"; color: var(--txt); }
+.rpn-form:has(#rpn-b-1:checked) .rpn-s0-display::after { content: "1"; color: var(--txt); }
+.rpn-form:has(#rpn-b-2:checked) .rpn-s0-display::after { content: "2"; color: var(--txt); }
+.rpn-form:has(#rpn-b-3:checked) .rpn-s0-display::after { content: "3"; color: var(--txt); }
+.rpn-form:has(#rpn-b-4:checked) .rpn-s0-display::after { content: "4"; color: var(--txt); }
+.rpn-form:has(#rpn-b-5:checked) .rpn-s0-display::after { content: "5"; color: var(--txt); }
+.rpn-form:has(#rpn-b-6:checked) .rpn-s0-display::after { content: "6"; color: var(--txt); }
+.rpn-form:has(#rpn-b-7:checked) .rpn-s0-display::after { content: "7"; color: var(--txt); }
+.rpn-form:has(#rpn-b-8:checked) .rpn-s0-display::after { content: "8"; color: var(--txt); }
+.rpn-form:has(#rpn-b-9:checked) .rpn-s0-display::after { content: "9"; color: var(--txt); }
+
+.rpn-form:has([name="rpn-op"]:not(#rpn-op-none):checked):has([name="rpn-a"]:not(#rpn-a-empty):checked):has([name="rpn-b"]:not(#rpn-b-empty):checked) .rpn-s0-display {
+  display: none;
+}
+.rpn-form:has([name="rpn-op"]:not(#rpn-op-none):checked):has([name="rpn-a"]:not(#rpn-a-empty):checked):has([name="rpn-b"]:not(#rpn-b-empty):checked) .rpn-result {
+  display: block;
+  color: var(--accent);
+}
+
+/* ===== 6 — Barra de operação selecionada ===== */
+
+.rpn-op-bar {
+  display: flex;
+  gap: .4rem;
+  justify-content: center;
+  margin-bottom: var(--space-sm);
+}
+
+.rpn-op-badge {
+  padding: var(--space-3xs) var(--space-sm);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line);
+  color: var(--txt-dim);
+  font-size: var(--text-sm);
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+}
+
+.rpn-form:has(#rpn-plus:checked) .rpn-op-badge--plus {
+  background: var(--rpn-active-dim);
+  color: var(--rpn-active);
+  border-color: var(--rpn-active);
+}
+
+.rpn-form:has(#rpn-minus:checked) .rpn-op-badge--minus {
+  background: var(--rpn-active-dim);
+  color: var(--rpn-active);
+  border-color: var(--rpn-active);
+}
+
+.rpn-form:has(#rpn-times:checked) .rpn-op-badge--times {
+  background: var(--rpn-active-dim);
+  color: var(--rpn-active);
+  border-color: var(--rpn-active);
+}
+
+/* ===== 7 — Teclado ===== */
+
+.rpn-kbd {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-bottom: .6rem;
+}
+
+.rpn-key {
+  position: relative;
+  overflow: hidden;
+  min-height: var(--rpn-key-sz);
+  border-radius: var(--r-lg);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--txt);
+  user-select: none;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-tap);
+}
+/* Hover só dispara quando a key tem algum label clicável (FSM modo-a/modo-b). */
+.rpn-form:has(#rpn-mode-a:checked) .rpn-key:hover { border-color: var(--accent2); }
+.rpn-form:has(#rpn-mode-b:checked) .rpn-key:hover { border-color: var(--accent2); }
+.rpn-key:active { transform: scale(.94); }
+/* ENTER em mode-b é inerte: sem hover/active mesmo sendo .rpn-key. */
+.rpn-form:has(#rpn-mode-b:checked) .rpn-key--enter:hover  { border-color: var(--line); }
+.rpn-form:has(#rpn-mode-b:checked) .rpn-key--enter:active { transform: none; }
+
+.rpn-key-a,
+.rpn-key-b,
+.rpn-key-enter,
+.rpn-key-op {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  cursor: pointer;
+}
+
+.rpn-form:has(#rpn-mode-a:checked) .rpn-key .rpn-key-a {
+  pointer-events: auto;
+}
+
+.rpn-form:has(#rpn-mode-b:checked) .rpn-key .rpn-key-b {
+  pointer-events: auto;
+}
+
+/* ENTER: só ativo em modo-a (empurra A para a pilha e avança modo) */
+.rpn-form:has(#rpn-mode-a:checked) .rpn-key--enter .rpn-key-enter {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* Teclas de operação: acessíveis em modo-b — âncora .rpn-key idêntica à dos dígitos */
+.rpn-form:has(#rpn-mode-b:checked) .rpn-key .rpn-key-op {
+  pointer-events: auto;
+}
+
+/* ENTER inerte em mode-b: feedback visual de desabilitado */
+.rpn-form:has(#rpn-mode-b:checked) .rpn-key--enter {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+/* ===== 8 — Realce de tecla cujo valor está selecionado ===== */
+/* :is(#rpn-a-N, #rpn-b-N) unifica os dois registradores no mesmo bloco,
+   eliminando duplicação sem alterar comportamento ou especificidade. */
+.rpn-form:has(:is(#rpn-a-0,#rpn-b-0):checked) .rpn-key--0,
+.rpn-form:has(:is(#rpn-a-1,#rpn-b-1):checked) .rpn-key--1,
+.rpn-form:has(:is(#rpn-a-2,#rpn-b-2):checked) .rpn-key--2,
+.rpn-form:has(:is(#rpn-a-3,#rpn-b-3):checked) .rpn-key--3,
+.rpn-form:has(:is(#rpn-a-4,#rpn-b-4):checked) .rpn-key--4,
+.rpn-form:has(:is(#rpn-a-5,#rpn-b-5):checked) .rpn-key--5,
+.rpn-form:has(:is(#rpn-a-6,#rpn-b-6):checked) .rpn-key--6,
+.rpn-form:has(:is(#rpn-a-7,#rpn-b-7):checked) .rpn-key--7,
+.rpn-form:has(:is(#rpn-a-8,#rpn-b-8):checked) .rpn-key--8,
+.rpn-form:has(:is(#rpn-a-9,#rpn-b-9):checked) .rpn-key--9 { background: var(--rpn-active-dim); border-color: var(--rpn-active); }
+
+/* ===== 9 — Prompt de instrução ===== */
+
+.rpn-prompt {
+  font-size: var(--text-xs);
+  color: var(--txt-dim);
+  text-align: center;
+  padding: .3rem 0 .6rem;
+  min-height: 1.4em;
+  transition: opacity var(--dur-quick);
+}
+
+.rpn-prompt::after {
+  content: "Digite o primeiro número · pressione ENTER";
+}
+
+.rpn-form:has(#rpn-mode-b:checked) .rpn-prompt::after {
+  content: "Digite o segundo número · escolha + − ×";
+}
+
+/* ROM oculta o prompt quando op+a+b estão definidos */
+.rpn-form:has([name="rpn-op"]:not(#rpn-op-none):checked):has([name="rpn-a"]:not(#rpn-a-empty):checked):has([name="rpn-b"]:not(#rpn-b-empty):checked) .rpn-prompt {
+  display: none;
+}
+
+/* ===== 10 — Botão de reset ===== */
+/* Estilo compartilhado: ver .proj-reset em style.css */
+
+/* ===== 11 — Focus-visible nos controles interativos ===== */
+
+#rpn-mode-b:focus-visible ~ .rpn .rpn-key--enter {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#rpn-plus:focus-visible ~ .rpn .rpn-key--plus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#rpn-minus:focus-visible ~ .rpn .rpn-key--minus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+#rpn-times:focus-visible ~ .rpn .rpn-key--times {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* ===== 13 — Teclas especiais ===== */
+
+.rpn-key--wide {
+  grid-column: span 2;
+}
+
+.rpn-key--empty {
+  background: transparent;
+  border-color: transparent;
+  pointer-events: none;
+}

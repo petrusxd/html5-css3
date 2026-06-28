@@ -1,0 +1,239 @@
+/* ============================================================
+   POMODORO — timer 25/5 min.
+   FSM de 3 estados via radio group name="pomo-state":
+     pomo-state-idle    (default, checked) → animation: none → timeline em 0
+     pomo-state-running                    → animation-play-state: running
+     pomo-state-paused                     → animation-play-state: paused
+   Reset nativo (<button type="reset">) restaura pomo-state-idle → timeline reseta.
+   Anel visual via @property --pomo-pct animado em conic-gradient.
+   ============================================================ */
+
+/* ---------- @property para animar o arco do anel ---------- */
+@property --pomo-pct {
+  syntax: "<number>";
+  initial-value: 1;
+  inherits: false;
+}
+
+.pomo-form { margin: 0; }
+.pomo-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.timer-ring-container {
+  position: relative;
+  width: 200px; height: 200px;
+}
+.timer-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-circle);
+  background: conic-gradient(
+    var(--accent) calc(var(--pomo-pct) * 360deg),
+    var(--line)   0
+  );
+}
+.timer-ring::after {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  border-radius: var(--r-circle);
+  background: var(--bg);
+}
+/* Animation múltipla: o ring principal (pomo-ring) decrementa --pomo-pct até 0;
+   pomo-complete-pulse começa com delay = duração total → só dispara quando o
+   timer atinge 0 (final do ciclo), pulsa indefinidamente até user reset. */
+.timer-ring--work {
+  animation: pomo-ring 1500s linear forwards,
+             pomo-complete-pulse 2s ease-in-out 1500s infinite;
+  animation-play-state: paused;
+  display: block;
+}
+.timer-ring--break {
+  animation: pomo-ring 300s linear forwards,
+             pomo-complete-pulse 2s ease-in-out 300s infinite;
+  animation-play-state: paused;
+  display: none;
+}
+
+@keyframes pomo-ring { from { --pomo-pct: 1; } to { --pomo-pct: 0; } }
+
+/* Completion: anel pulsa quando atinge 0% (--pomo-pct == 0), sinalizando fim
+   do ciclo. Aplicada nos rings via animation-composition: replace garante que
+   substitui o pomo-ring (que já chegou a 0). Pulsa por 3s para chamar atenção. */
+@keyframes pomo-complete-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; }
+  50%      { box-shadow: inset 0 0 24px 4px var(--accent); }
+}
+
+.timer-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  font-family: var(--mono);
+}
+.timer-body { display: block; }
+.timer-body--break { display: none; }
+
+/* Spans de minutos: absolutamente posicionados sobre si, apenas 1 visível */
+.min-span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+}
+.min-span .min-num {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+.min-span .min-label {
+  font-size: .75rem;
+  color: var(--txt-dim);
+  letter-spacing: .1em;
+  margin-top: var(--space-3xs);
+}
+
+.pomo-mode-btns {
+  display: flex;
+  gap: .6rem;
+}
+.pomo-mode-btn {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  padding: .4rem .9rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  color: var(--txt-dim);
+  cursor: pointer;
+  transition: border-color var(--dur-quick), color var(--dur-quick), background var(--dur-quick), transform var(--dur-tap);
+  user-select: none;
+}
+.pomo-mode-btn:hover  { color: var(--txt); border-color: var(--accent2); }
+.pomo-mode-btn:active { transform: scale(.96); }
+#pomo-mode-work:checked  ~ .pomo-body .pomo-mode-btn--work  { color: var(--bg); background: var(--accent2); border-color: var(--accent2); font-weight: 700; }
+#pomo-mode-break:checked ~ .pomo-body .pomo-mode-btn--break { color: var(--bg); background: var(--on);      border-color: var(--on);      font-weight: 700; }
+
+/* ---------- modo break: trocar ring e spans ---------- */
+#pomo-mode-break:checked ~ .pomo-body .timer-ring--work  { display: none; }
+#pomo-mode-break:checked ~ .pomo-body .timer-ring--break { display: block; }
+#pomo-mode-break:checked ~ .pomo-body .timer-body--work  { display: none; }
+#pomo-mode-break:checked ~ .pomo-body .timer-body--break { display: block; }
+
+.pomo-ctrl { display: flex; gap: var(--space-sm); align-items: center; }
+.pomo-btn {
+  font-family: var(--mono);
+  font-size: 1.2rem;
+  width: 3rem; height: 3rem;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r-circle);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--txt);
+  cursor: pointer;
+  transition: border-color var(--dur-quick), box-shadow var(--dur-quick), transform var(--dur-tap);
+  user-select: none;
+}
+.pomo-btn:hover  { border-color: var(--accent); box-shadow: var(--elev-soft); }
+.pomo-btn:active { transform: scale(.92); }
+
+.pomo-btn--pause { display: none; }
+/* running: esconde play, mostra pause */
+#pomo-state-running:checked ~ .pomo-body .pomo-btn--play  { display: none; }
+#pomo-state-running:checked ~ .pomo-body .pomo-btn--pause { display: flex; }
+/* paused: mostra play (retomar), esconde pause */
+#pomo-state-paused:checked  ~ .pomo-body .pomo-btn--play  { display: flex; }
+#pomo-state-paused:checked  ~ .pomo-body .pomo-btn--pause { display: none; }
+
+/* texto acessível dinâmico via ::before em elemento real (lido por screen readers) */
+.pomo-play-label::before { content: "Iniciar"; }
+#pomo-state-paused:checked ~ .pomo-body .pomo-btn--play .pomo-play-label::before { content: "Retomar"; }
+
+.pomo-btn--reset {
+  font-size: var(--text-md); width: 2.4rem; height: 2.4rem;
+  color: var(--txt-dim); border-color: var(--line);
+  cursor: pointer; background: transparent;
+}
+.pomo-btn--reset:hover { color: var(--danger); border-color: var(--danger); }
+
+/* ---------- idle: remove animation → timeline retorna a 0 ao reiniciar ---------- */
+/* Especificidade (1,1,1) supera as regras de classe em pomodoro-rom.css (0,1,0) */
+#pomo-state-idle:checked ~ .pomo-body .min-w,
+#pomo-state-idle:checked ~ .pomo-body .min-b,
+#pomo-state-idle:checked ~ .pomo-body .timer-ring--work,
+#pomo-state-idle:checked ~ .pomo-body .timer-ring--break { animation: none; }
+
+/* idle: display inicial visível (.min-span tem opacity:0 como base;
+   animation:none descarta o fill-mode que mostrava o from-keyframe) */
+#pomo-state-idle:checked ~ .pomo-body .min-w-25 { opacity: 1; }
+#pomo-mode-break:checked ~ #pomo-state-idle:checked ~ .pomo-body .min-b-5 { opacity: 1; }
+
+/* ---------- play-state: work ---------- */
+#pomo-state-running:checked ~ .pomo-body .min-w            { animation-play-state: running; }
+#pomo-state-running:checked ~ .pomo-body .timer-ring--work { animation-play-state: running; }
+/* pausa work quando mode=break (especificidade 2 IDs > 1 ID → vence) */
+#pomo-mode-break:checked ~ #pomo-state-running:checked ~ .pomo-body .min-w            { animation-play-state: paused; }
+#pomo-mode-break:checked ~ #pomo-state-running:checked ~ .pomo-body .timer-ring--work { animation-play-state: paused; }
+
+/* ---------- play-state: break ---------- */
+#pomo-mode-break:checked ~ #pomo-state-running:checked ~ .pomo-body .min-b             { animation-play-state: running; }
+#pomo-mode-break:checked ~ #pomo-state-running:checked ~ .pomo-body .timer-ring--break { animation-play-state: running; }
+
+/* ---------- paused: congela timeline (retoma de onde parou) ---------- */
+#pomo-state-paused:checked ~ .pomo-body .min-w,
+#pomo-state-paused:checked ~ .pomo-body .min-b,
+#pomo-state-paused:checked ~ .pomo-body .timer-ring--work,
+#pomo-state-paused:checked ~ .pomo-body .timer-ring--break { animation-play-state: paused; }
+
+.pomo-status {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  color: var(--txt-dim);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  min-height: 1.2em;        /* reserva linha para evitar CLS quando ::after aparece */
+}
+/* Estados sempre ocupam mesmo espaço — letter-count similar. */
+.pomo-status::after                                          { content: " \2022 pronto"; }
+#pomo-state-running:checked ~ .pomo-body .pomo-status::after { content: " \2022 rodando"; color: var(--on); }
+#pomo-state-paused:checked  ~ .pomo-body .pomo-status::after { content: " \2022 pausado"; color: var(--txt-dim); }
+
+/* ===== 9 — Focus-visible em controles label-wrapped (a11y) =====
+   As radios pomo-mode-* e pomo-state-* são tab-focáveis (sem tabindex=-1),
+   mas as .sr-only escondem o input. As labels visíveis precisam refletir o
+   foco do input associado. Padrão `~` funciona: inputs são siblings de
+   .pomo-body. (.pomo-btn--reset é <button> real e herda focus do universal
+   button:focus-visible em style.css.) */
+#pomo-mode-work:focus-visible     ~ .pomo-body .pomo-mode-btn--work,
+#pomo-mode-break:focus-visible    ~ .pomo-body .pomo-mode-btn--break,
+#pomo-state-running:focus-visible ~ .pomo-body .pomo-btn--play,
+#pomo-state-paused:focus-visible  ~ .pomo-body .pomo-btn--pause {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- prefers-reduced-motion ---------- */
+/* Per-módulo (não global): pomodoro precisa de fallback estático porque os
+   min-spans dependem de animation+fill-mode para mostrar o minuto correto.
+   Com animation:none, garantimos opacity:1 no minuto inicial de cada modo. */
+@media (prefers-reduced-motion: reduce) {
+  .timer-ring--work, .timer-ring--break,
+  .min-w, .min-b { animation: none !important; }
+  .pomo-btn, .pomo-mode-btn { transition: none !important; }
+  /* Exibição estática: mostra minuto inicial em cada modo */
+  .min-w-25 { opacity: 1; }
+  #pomo-mode-break:checked ~ .pomo-body .min-b-5 { opacity: 1; }
+}
+

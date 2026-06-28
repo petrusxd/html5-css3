@@ -1,0 +1,79 @@
+@charset "UTF-8";
+/* ============================================================
+   BF-MINI — trace de execução passo a passo do interpretador.
+   Para cada step_k: exibe IP, valores das 4 células, destaca
+   a célula apontada por DP e a instrução em execução.
+   Arquivo derivado mecanicamente; não edite à mão.
+   ============================================================ */
+
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .reg-ip::after { content: "0"; }
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .bf-cell--0 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .bf-cell--1 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .bf-cell--0 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_0:checked):not(:has(#bf_step_1:checked)) .bf__prog li:nth-child(1) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .reg-ip::after { content: "1"; }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .bf-cell--0 .bf-cell__val::after { content: "1"; }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .bf-cell--1 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .bf-cell--0 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_1:checked):not(:has(#bf_step_2:checked)) .bf__prog li:nth-child(2) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .reg-ip::after { content: "2"; }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .bf-cell--0 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .bf-cell--1 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .bf-cell--0 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_2:checked):not(:has(#bf_step_3:checked)) .bf__prog li:nth-child(3) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .reg-ip::after { content: "3"; }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .bf-cell--0 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .bf-cell--1 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .bf-cell--1 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_3:checked):not(:has(#bf_step_4:checked)) .bf__prog li:nth-child(4) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .reg-ip::after { content: "4"; }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .bf-cell--0 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .bf-cell--1 .bf-cell__val::after { content: "1"; }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .bf-cell--1 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_4:checked):not(:has(#bf_step_5:checked)) .bf__prog li:nth-child(5) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .reg-ip::after { content: "5"; }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .bf-cell--0 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .bf-cell--1 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .bf-cell--1 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_5:checked):not(:has(#bf_step_6:checked)) .bf__prog li:nth-child(6) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .reg-ip::after { content: "6"; }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .bf-cell--0 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .bf-cell--1 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .bf-cell--0 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_6:checked):not(:has(#bf_step_7:checked)) .bf__prog li:nth-child(7) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .reg-ip::after { content: "7"; }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .bf-cell--0 .bf-cell__val::after { content: "1"; }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .bf-cell--1 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .bf-cell--0 { background: var(--bf-active); border-color: var(--accent); }
+.bf-form:has(#bf_step_7:checked):not(:has(#bf_step_8:checked)) .bf__prog li:nth-child(8) { color: var(--accent); font-weight: 700; }
+
+.bf-form:has(#bf_step_8:checked) .reg-ip::after { content: "FIM"; }
+.bf-form:has(#bf_step_8:checked) .bf-cell--0 .bf-cell__val::after { content: "1"; }
+.bf-form:has(#bf_step_8:checked) .bf-cell--1 .bf-cell__val::after { content: "2"; }
+.bf-form:has(#bf_step_8:checked) .bf-cell--2 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_8:checked) .bf-cell--3 .bf-cell__val::after { content: "0"; }
+.bf-form:has(#bf_step_8:checked) .bf-cell--1 { background: var(--bf-active); border-color: var(--accent); }
+

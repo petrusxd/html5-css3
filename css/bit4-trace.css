@@ -1,0 +1,50 @@
+@charset "UTF-8";
+/* ============================================================
+   Trace de execução passo a passo da CPU BIT-4.
+   Cada regra ecoa (PC, R0) ou ativa a flag HALT enquanto step_k
+   for o último radio marcado em name="step".
+   Arquivo derivado mecanicamente; não edite à mão.
+   ============================================================ */
+
+.bit4-form:has(#step_0:checked):not(:has(#step_1:checked)) .reg-pc::after  { content: "0"; }
+.bit4-form:has(#step_0:checked):not(:has(#step_1:checked)) .reg-r0::after  { content: "0"; }
+.bit4-form:has(#step_0:checked):not(:has(#step_1:checked)) .bit4__prog li:nth-child(1) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_1:checked):not(:has(#step_2:checked)) .reg-pc::after  { content: "1"; }
+.bit4-form:has(#step_1:checked):not(:has(#step_2:checked)) .reg-r0::after  { content: "3"; }
+.bit4-form:has(#step_1:checked):not(:has(#step_2:checked)) .bit4__prog li:nth-child(2) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_2:checked):not(:has(#step_3:checked)) .reg-pc::after  { content: "2"; }
+.bit4-form:has(#step_2:checked):not(:has(#step_3:checked)) .reg-r0::after  { content: "2"; }
+.bit4-form:has(#step_2:checked):not(:has(#step_3:checked)) .bit4__prog li:nth-child(3) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_3:checked):not(:has(#step_4:checked)) .reg-pc::after  { content: "1"; }
+.bit4-form:has(#step_3:checked):not(:has(#step_4:checked)) .reg-r0::after  { content: "2"; }
+.bit4-form:has(#step_3:checked):not(:has(#step_4:checked)) .bit4__prog li:nth-child(2) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_4:checked):not(:has(#step_5:checked)) .reg-pc::after  { content: "2"; }
+.bit4-form:has(#step_4:checked):not(:has(#step_5:checked)) .reg-r0::after  { content: "1"; }
+.bit4-form:has(#step_4:checked):not(:has(#step_5:checked)) .bit4__prog li:nth-child(3) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_5:checked):not(:has(#step_6:checked)) .reg-pc::after  { content: "1"; }
+.bit4-form:has(#step_5:checked):not(:has(#step_6:checked)) .reg-r0::after  { content: "1"; }
+.bit4-form:has(#step_5:checked):not(:has(#step_6:checked)) .bit4__prog li:nth-child(2) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_6:checked):not(:has(#step_7:checked)) .reg-pc::after  { content: "2"; }
+.bit4-form:has(#step_6:checked):not(:has(#step_7:checked)) .reg-r0::after  { content: "0"; }
+.bit4-form:has(#step_6:checked):not(:has(#step_7:checked)) .bit4__prog li:nth-child(3) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_7:checked):not(:has(#step_8:checked)) .reg-pc::after  { content: "3"; }
+.bit4-form:has(#step_7:checked):not(:has(#step_8:checked)) .reg-r0::after  { content: "0"; }
+.bit4-form:has(#step_7:checked):not(:has(#step_8:checked)) .bit4__prog li:nth-child(4) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_8:checked):not(:has(#step_9:checked)) .reg-pc::after  { content: "3"; }
+.bit4-form:has(#step_8:checked):not(:has(#step_9:checked)) .reg-r0::after  { content: "0"; }
+.bit4-form:has(#step_8:checked):not(:has(#step_9:checked)) .halt-flag { opacity: 1; }
+.bit4-form:has(#step_8:checked):not(:has(#step_9:checked)) .bit4__prog li:nth-child(4) { color: var(--accent); font-weight: 700; }
+
+.bit4-form:has(#step_9:checked) .reg-pc::after  { content: "3"; }
+.bit4-form:has(#step_9:checked) .reg-r0::after  { content: "0"; }
+.bit4-form:has(#step_9:checked) .halt-flag { opacity: 1; }
+.bit4-form:has(#step_9:checked) .bit4__prog li:nth-child(4) { color: var(--accent); font-weight: 700; }
+

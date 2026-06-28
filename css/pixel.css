@@ -1,0 +1,716 @@
+/* ============================================================
+   PIXEL-ART — editor 8×8, 4 cores. Estado: 64 radio groups
+   name="px0"…"px63" × 4 (r/g/b/k) + name="pal" × 4.
+   Paleta FSM: #pal_X:checked ~ .pixel-body .cell-label--X.
+   Cor de célula: #pxN_X:checked ~ .pixel-body .cell-N.
+   ============================================================ */
+
+/* ===== 1 — Custom properties específicas do pixel-art ===== */
+
+:root {
+  --pix-r:      #ef4444;   /* vermelho */
+  --pix-g:      #22c55e;   /* verde */
+  --pix-b:      #3b82f6;   /* azul */
+  --pix-k:      #1e1e2e;   /* preto/escuro */
+  --pix-canvas: #f0f4f8;   /* fundo padrão das células (branco-acinzentado) */
+  --pix-gap:    2px;
+  --pix-cell:   38px;      /* tamanho de cada célula */
+}
+
+/* ===== 2 — Layout do editor ===== */
+
+.pixel-form {
+  margin: 0;
+}
+
+.pixel-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.pixel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+/* ===== 3 — Paleta de seleção ===== */
+
+.palette-btns {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.pal-btn {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-circle);
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color var(--dur-quick), box-shadow var(--dur-quick), transform var(--dur-tap);
+}
+.pal-btn:hover  { transform: scale(1.08); }
+.pal-btn:active { transform: scale(.92); }
+
+.pal-btn--r { background: var(--pix-r); }
+.pal-btn--g { background: var(--pix-g); }
+.pal-btn--b { background: var(--pix-b); }
+.pal-btn--k { background: var(--pix-k); border-color: var(--line); }
+
+#pal_r:checked ~ .pixel-body .pal-btn--r { border-color: var(--txt); box-shadow: 0 0 0 2px var(--pix-r); }
+#pal_g:checked ~ .pixel-body .pal-btn--g { border-color: var(--txt); box-shadow: 0 0 0 2px var(--pix-g); }
+#pal_b:checked ~ .pixel-body .pal-btn--b { border-color: var(--txt); box-shadow: 0 0 0 2px var(--pix-b); }
+#pal_k:checked ~ .pixel-body .pal-btn--k { border-color: var(--txt); box-shadow: 0 0 0 2px var(--pix-k); }
+
+/* foco de teclado: radio oculto focado → ring no botão visível correspondente */
+#pal_r:focus-visible ~ .pixel-body .pal-btn--r,
+#pal_g:focus-visible ~ .pixel-body .pal-btn--g,
+#pal_b:focus-visible ~ .pixel-body .pal-btn--b,
+#pal_k:focus-visible ~ .pixel-body .pal-btn--k {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ===== 4 — Botão de reset ===== */
+
+.pixel-reset {
+  font-family: var(--mono);
+  font-size: var(--text-sm);
+  padding: .4rem .9rem;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--txt-dim);
+  cursor: pointer;
+  transition: border-color var(--dur-quick), color var(--dur-quick), transform var(--dur-tap);
+}
+.pixel-reset:hover  { border-color: var(--danger); color: var(--danger); }
+.pixel-reset:active { transform: scale(.96); }
+
+/* ===== 5 — Grid 8×8 ===== */
+
+.pixel-grid {
+  display: grid;
+  grid-template-columns: repeat(8, var(--pix-cell));
+  grid-template-rows:    repeat(8, var(--pix-cell));
+  gap: var(--pix-gap);
+  background: var(--line);    /* "borda" do grid inteira */
+  border: 2px solid var(--line);
+  border-radius: var(--r-xs);
+  padding: var(--pix-gap);
+}
+
+.pixel-cell {
+  position: relative;
+  width:  var(--pix-cell);
+  height: var(--pix-cell);
+  background: var(--pix-canvas);
+  overflow: hidden;
+  transition: background var(--dur-tap);
+}
+/* Hover preview: ao passar o cursor sobre célula, mostra a cor da paleta ativa
+   como tint. .cell-label--X só fica clicável (pointer-events:auto) na paleta
+   correspondente — então :hover só dispara no label da cor ativa. */
+.pixel-cell:has(.cell-label--r:hover) { background: color-mix(in oklch, var(--pix-r) 35%, var(--pix-canvas)); }
+.pixel-cell:has(.cell-label--g:hover) { background: color-mix(in oklch, var(--pix-g) 35%, var(--pix-canvas)); }
+.pixel-cell:has(.cell-label--b:hover) { background: color-mix(in oklch, var(--pix-b) 35%, var(--pix-canvas)); }
+.pixel-cell:has(.cell-label--k:hover) { background: color-mix(in oklch, var(--pix-k) 35%, var(--pix-canvas)); }
+
+.cell-label {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;    /* TODAS inativas por padrão */
+}
+
+/* ===== 6 — FSM da paleta (4 regras) ===== */
+
+/* FSM paleta: só a label da cor ativa é clicável */
+#pal_r:checked ~ .pixel-body .cell-label--r { pointer-events: auto; cursor: crosshair; }
+#pal_g:checked ~ .pixel-body .cell-label--g { pointer-events: auto; cursor: crosshair; }
+#pal_b:checked ~ .pixel-body .cell-label--b { pointer-events: auto; cursor: crosshair; }
+#pal_k:checked ~ .pixel-body .cell-label--k { pointer-events: auto; cursor: crosshair; }
+
+/* ===== 7 — Regras de cor das células (256 regras, 64 × 4) ===== */
+
+#px0_r:checked ~ .pixel-body .cell-0 { background: var(--pix-r); }
+#px0_g:checked ~ .pixel-body .cell-0 { background: var(--pix-g); }
+#px0_b:checked ~ .pixel-body .cell-0 { background: var(--pix-b); }
+#px0_k:checked ~ .pixel-body .cell-0 { background: var(--pix-k); }
+#px1_r:checked ~ .pixel-body .cell-1 { background: var(--pix-r); }
+#px1_g:checked ~ .pixel-body .cell-1 { background: var(--pix-g); }
+#px1_b:checked ~ .pixel-body .cell-1 { background: var(--pix-b); }
+#px1_k:checked ~ .pixel-body .cell-1 { background: var(--pix-k); }
+#px2_r:checked ~ .pixel-body .cell-2 { background: var(--pix-r); }
+#px2_g:checked ~ .pixel-body .cell-2 { background: var(--pix-g); }
+#px2_b:checked ~ .pixel-body .cell-2 { background: var(--pix-b); }
+#px2_k:checked ~ .pixel-body .cell-2 { background: var(--pix-k); }
+#px3_r:checked ~ .pixel-body .cell-3 { background: var(--pix-r); }
+#px3_g:checked ~ .pixel-body .cell-3 { background: var(--pix-g); }
+#px3_b:checked ~ .pixel-body .cell-3 { background: var(--pix-b); }
+#px3_k:checked ~ .pixel-body .cell-3 { background: var(--pix-k); }
+#px4_r:checked ~ .pixel-body .cell-4 { background: var(--pix-r); }
+#px4_g:checked ~ .pixel-body .cell-4 { background: var(--pix-g); }
+#px4_b:checked ~ .pixel-body .cell-4 { background: var(--pix-b); }
+#px4_k:checked ~ .pixel-body .cell-4 { background: var(--pix-k); }
+#px5_r:checked ~ .pixel-body .cell-5 { background: var(--pix-r); }
+#px5_g:checked ~ .pixel-body .cell-5 { background: var(--pix-g); }
+#px5_b:checked ~ .pixel-body .cell-5 { background: var(--pix-b); }
+#px5_k:checked ~ .pixel-body .cell-5 { background: var(--pix-k); }
+#px6_r:checked ~ .pixel-body .cell-6 { background: var(--pix-r); }
+#px6_g:checked ~ .pixel-body .cell-6 { background: var(--pix-g); }
+#px6_b:checked ~ .pixel-body .cell-6 { background: var(--pix-b); }
+#px6_k:checked ~ .pixel-body .cell-6 { background: var(--pix-k); }
+#px7_r:checked ~ .pixel-body .cell-7 { background: var(--pix-r); }
+#px7_g:checked ~ .pixel-body .cell-7 { background: var(--pix-g); }
+#px7_b:checked ~ .pixel-body .cell-7 { background: var(--pix-b); }
+#px7_k:checked ~ .pixel-body .cell-7 { background: var(--pix-k); }
+#px8_r:checked ~ .pixel-body .cell-8 { background: var(--pix-r); }
+#px8_g:checked ~ .pixel-body .cell-8 { background: var(--pix-g); }
+#px8_b:checked ~ .pixel-body .cell-8 { background: var(--pix-b); }
+#px8_k:checked ~ .pixel-body .cell-8 { background: var(--pix-k); }
+#px9_r:checked ~ .pixel-body .cell-9 { background: var(--pix-r); }
+#px9_g:checked ~ .pixel-body .cell-9 { background: var(--pix-g); }
+#px9_b:checked ~ .pixel-body .cell-9 { background: var(--pix-b); }
+#px9_k:checked ~ .pixel-body .cell-9 { background: var(--pix-k); }
+#px10_r:checked ~ .pixel-body .cell-10 { background: var(--pix-r); }
+#px10_g:checked ~ .pixel-body .cell-10 { background: var(--pix-g); }
+#px10_b:checked ~ .pixel-body .cell-10 { background: var(--pix-b); }
+#px10_k:checked ~ .pixel-body .cell-10 { background: var(--pix-k); }
+#px11_r:checked ~ .pixel-body .cell-11 { background: var(--pix-r); }
+#px11_g:checked ~ .pixel-body .cell-11 { background: var(--pix-g); }
+#px11_b:checked ~ .pixel-body .cell-11 { background: var(--pix-b); }
+#px11_k:checked ~ .pixel-body .cell-11 { background: var(--pix-k); }
+#px12_r:checked ~ .pixel-body .cell-12 { background: var(--pix-r); }
+#px12_g:checked ~ .pixel-body .cell-12 { background: var(--pix-g); }
+#px12_b:checked ~ .pixel-body .cell-12 { background: var(--pix-b); }
+#px12_k:checked ~ .pixel-body .cell-12 { background: var(--pix-k); }
+#px13_r:checked ~ .pixel-body .cell-13 { background: var(--pix-r); }
+#px13_g:checked ~ .pixel-body .cell-13 { background: var(--pix-g); }
+#px13_b:checked ~ .pixel-body .cell-13 { background: var(--pix-b); }
+#px13_k:checked ~ .pixel-body .cell-13 { background: var(--pix-k); }
+#px14_r:checked ~ .pixel-body .cell-14 { background: var(--pix-r); }
+#px14_g:checked ~ .pixel-body .cell-14 { background: var(--pix-g); }
+#px14_b:checked ~ .pixel-body .cell-14 { background: var(--pix-b); }
+#px14_k:checked ~ .pixel-body .cell-14 { background: var(--pix-k); }
+#px15_r:checked ~ .pixel-body .cell-15 { background: var(--pix-r); }
+#px15_g:checked ~ .pixel-body .cell-15 { background: var(--pix-g); }
+#px15_b:checked ~ .pixel-body .cell-15 { background: var(--pix-b); }
+#px15_k:checked ~ .pixel-body .cell-15 { background: var(--pix-k); }
+#px16_r:checked ~ .pixel-body .cell-16 { background: var(--pix-r); }
+#px16_g:checked ~ .pixel-body .cell-16 { background: var(--pix-g); }
+#px16_b:checked ~ .pixel-body .cell-16 { background: var(--pix-b); }
+#px16_k:checked ~ .pixel-body .cell-16 { background: var(--pix-k); }
+#px17_r:checked ~ .pixel-body .cell-17 { background: var(--pix-r); }
+#px17_g:checked ~ .pixel-body .cell-17 { background: var(--pix-g); }
+#px17_b:checked ~ .pixel-body .cell-17 { background: var(--pix-b); }
+#px17_k:checked ~ .pixel-body .cell-17 { background: var(--pix-k); }
+#px18_r:checked ~ .pixel-body .cell-18 { background: var(--pix-r); }
+#px18_g:checked ~ .pixel-body .cell-18 { background: var(--pix-g); }
+#px18_b:checked ~ .pixel-body .cell-18 { background: var(--pix-b); }
+#px18_k:checked ~ .pixel-body .cell-18 { background: var(--pix-k); }
+#px19_r:checked ~ .pixel-body .cell-19 { background: var(--pix-r); }
+#px19_g:checked ~ .pixel-body .cell-19 { background: var(--pix-g); }
+#px19_b:checked ~ .pixel-body .cell-19 { background: var(--pix-b); }
+#px19_k:checked ~ .pixel-body .cell-19 { background: var(--pix-k); }
+#px20_r:checked ~ .pixel-body .cell-20 { background: var(--pix-r); }
+#px20_g:checked ~ .pixel-body .cell-20 { background: var(--pix-g); }
+#px20_b:checked ~ .pixel-body .cell-20 { background: var(--pix-b); }
+#px20_k:checked ~ .pixel-body .cell-20 { background: var(--pix-k); }
+#px21_r:checked ~ .pixel-body .cell-21 { background: var(--pix-r); }
+#px21_g:checked ~ .pixel-body .cell-21 { background: var(--pix-g); }
+#px21_b:checked ~ .pixel-body .cell-21 { background: var(--pix-b); }
+#px21_k:checked ~ .pixel-body .cell-21 { background: var(--pix-k); }
+#px22_r:checked ~ .pixel-body .cell-22 { background: var(--pix-r); }
+#px22_g:checked ~ .pixel-body .cell-22 { background: var(--pix-g); }
+#px22_b:checked ~ .pixel-body .cell-22 { background: var(--pix-b); }
+#px22_k:checked ~ .pixel-body .cell-22 { background: var(--pix-k); }
+#px23_r:checked ~ .pixel-body .cell-23 { background: var(--pix-r); }
+#px23_g:checked ~ .pixel-body .cell-23 { background: var(--pix-g); }
+#px23_b:checked ~ .pixel-body .cell-23 { background: var(--pix-b); }
+#px23_k:checked ~ .pixel-body .cell-23 { background: var(--pix-k); }
+#px24_r:checked ~ .pixel-body .cell-24 { background: var(--pix-r); }
+#px24_g:checked ~ .pixel-body .cell-24 { background: var(--pix-g); }
+#px24_b:checked ~ .pixel-body .cell-24 { background: var(--pix-b); }
+#px24_k:checked ~ .pixel-body .cell-24 { background: var(--pix-k); }
+#px25_r:checked ~ .pixel-body .cell-25 { background: var(--pix-r); }
+#px25_g:checked ~ .pixel-body .cell-25 { background: var(--pix-g); }
+#px25_b:checked ~ .pixel-body .cell-25 { background: var(--pix-b); }
+#px25_k:checked ~ .pixel-body .cell-25 { background: var(--pix-k); }
+#px26_r:checked ~ .pixel-body .cell-26 { background: var(--pix-r); }
+#px26_g:checked ~ .pixel-body .cell-26 { background: var(--pix-g); }
+#px26_b:checked ~ .pixel-body .cell-26 { background: var(--pix-b); }
+#px26_k:checked ~ .pixel-body .cell-26 { background: var(--pix-k); }
+#px27_r:checked ~ .pixel-body .cell-27 { background: var(--pix-r); }
+#px27_g:checked ~ .pixel-body .cell-27 { background: var(--pix-g); }
+#px27_b:checked ~ .pixel-body .cell-27 { background: var(--pix-b); }
+#px27_k:checked ~ .pixel-body .cell-27 { background: var(--pix-k); }
+#px28_r:checked ~ .pixel-body .cell-28 { background: var(--pix-r); }
+#px28_g:checked ~ .pixel-body .cell-28 { background: var(--pix-g); }
+#px28_b:checked ~ .pixel-body .cell-28 { background: var(--pix-b); }
+#px28_k:checked ~ .pixel-body .cell-28 { background: var(--pix-k); }
+#px29_r:checked ~ .pixel-body .cell-29 { background: var(--pix-r); }
+#px29_g:checked ~ .pixel-body .cell-29 { background: var(--pix-g); }
+#px29_b:checked ~ .pixel-body .cell-29 { background: var(--pix-b); }
+#px29_k:checked ~ .pixel-body .cell-29 { background: var(--pix-k); }
+#px30_r:checked ~ .pixel-body .cell-30 { background: var(--pix-r); }
+#px30_g:checked ~ .pixel-body .cell-30 { background: var(--pix-g); }
+#px30_b:checked ~ .pixel-body .cell-30 { background: var(--pix-b); }
+#px30_k:checked ~ .pixel-body .cell-30 { background: var(--pix-k); }
+#px31_r:checked ~ .pixel-body .cell-31 { background: var(--pix-r); }
+#px31_g:checked ~ .pixel-body .cell-31 { background: var(--pix-g); }
+#px31_b:checked ~ .pixel-body .cell-31 { background: var(--pix-b); }
+#px31_k:checked ~ .pixel-body .cell-31 { background: var(--pix-k); }
+#px32_r:checked ~ .pixel-body .cell-32 { background: var(--pix-r); }
+#px32_g:checked ~ .pixel-body .cell-32 { background: var(--pix-g); }
+#px32_b:checked ~ .pixel-body .cell-32 { background: var(--pix-b); }
+#px32_k:checked ~ .pixel-body .cell-32 { background: var(--pix-k); }
+#px33_r:checked ~ .pixel-body .cell-33 { background: var(--pix-r); }
+#px33_g:checked ~ .pixel-body .cell-33 { background: var(--pix-g); }
+#px33_b:checked ~ .pixel-body .cell-33 { background: var(--pix-b); }
+#px33_k:checked ~ .pixel-body .cell-33 { background: var(--pix-k); }
+#px34_r:checked ~ .pixel-body .cell-34 { background: var(--pix-r); }
+#px34_g:checked ~ .pixel-body .cell-34 { background: var(--pix-g); }
+#px34_b:checked ~ .pixel-body .cell-34 { background: var(--pix-b); }
+#px34_k:checked ~ .pixel-body .cell-34 { background: var(--pix-k); }
+#px35_r:checked ~ .pixel-body .cell-35 { background: var(--pix-r); }
+#px35_g:checked ~ .pixel-body .cell-35 { background: var(--pix-g); }
+#px35_b:checked ~ .pixel-body .cell-35 { background: var(--pix-b); }
+#px35_k:checked ~ .pixel-body .cell-35 { background: var(--pix-k); }
+#px36_r:checked ~ .pixel-body .cell-36 { background: var(--pix-r); }
+#px36_g:checked ~ .pixel-body .cell-36 { background: var(--pix-g); }
+#px36_b:checked ~ .pixel-body .cell-36 { background: var(--pix-b); }
+#px36_k:checked ~ .pixel-body .cell-36 { background: var(--pix-k); }
+#px37_r:checked ~ .pixel-body .cell-37 { background: var(--pix-r); }
+#px37_g:checked ~ .pixel-body .cell-37 { background: var(--pix-g); }
+#px37_b:checked ~ .pixel-body .cell-37 { background: var(--pix-b); }
+#px37_k:checked ~ .pixel-body .cell-37 { background: var(--pix-k); }
+#px38_r:checked ~ .pixel-body .cell-38 { background: var(--pix-r); }
+#px38_g:checked ~ .pixel-body .cell-38 { background: var(--pix-g); }
+#px38_b:checked ~ .pixel-body .cell-38 { background: var(--pix-b); }
+#px38_k:checked ~ .pixel-body .cell-38 { background: var(--pix-k); }
+#px39_r:checked ~ .pixel-body .cell-39 { background: var(--pix-r); }
+#px39_g:checked ~ .pixel-body .cell-39 { background: var(--pix-g); }
+#px39_b:checked ~ .pixel-body .cell-39 { background: var(--pix-b); }
+#px39_k:checked ~ .pixel-body .cell-39 { background: var(--pix-k); }
+#px40_r:checked ~ .pixel-body .cell-40 { background: var(--pix-r); }
+#px40_g:checked ~ .pixel-body .cell-40 { background: var(--pix-g); }
+#px40_b:checked ~ .pixel-body .cell-40 { background: var(--pix-b); }
+#px40_k:checked ~ .pixel-body .cell-40 { background: var(--pix-k); }
+#px41_r:checked ~ .pixel-body .cell-41 { background: var(--pix-r); }
+#px41_g:checked ~ .pixel-body .cell-41 { background: var(--pix-g); }
+#px41_b:checked ~ .pixel-body .cell-41 { background: var(--pix-b); }
+#px41_k:checked ~ .pixel-body .cell-41 { background: var(--pix-k); }
+#px42_r:checked ~ .pixel-body .cell-42 { background: var(--pix-r); }
+#px42_g:checked ~ .pixel-body .cell-42 { background: var(--pix-g); }
+#px42_b:checked ~ .pixel-body .cell-42 { background: var(--pix-b); }
+#px42_k:checked ~ .pixel-body .cell-42 { background: var(--pix-k); }
+#px43_r:checked ~ .pixel-body .cell-43 { background: var(--pix-r); }
+#px43_g:checked ~ .pixel-body .cell-43 { background: var(--pix-g); }
+#px43_b:checked ~ .pixel-body .cell-43 { background: var(--pix-b); }
+#px43_k:checked ~ .pixel-body .cell-43 { background: var(--pix-k); }
+#px44_r:checked ~ .pixel-body .cell-44 { background: var(--pix-r); }
+#px44_g:checked ~ .pixel-body .cell-44 { background: var(--pix-g); }
+#px44_b:checked ~ .pixel-body .cell-44 { background: var(--pix-b); }
+#px44_k:checked ~ .pixel-body .cell-44 { background: var(--pix-k); }
+#px45_r:checked ~ .pixel-body .cell-45 { background: var(--pix-r); }
+#px45_g:checked ~ .pixel-body .cell-45 { background: var(--pix-g); }
+#px45_b:checked ~ .pixel-body .cell-45 { background: var(--pix-b); }
+#px45_k:checked ~ .pixel-body .cell-45 { background: var(--pix-k); }
+#px46_r:checked ~ .pixel-body .cell-46 { background: var(--pix-r); }
+#px46_g:checked ~ .pixel-body .cell-46 { background: var(--pix-g); }
+#px46_b:checked ~ .pixel-body .cell-46 { background: var(--pix-b); }
+#px46_k:checked ~ .pixel-body .cell-46 { background: var(--pix-k); }
+#px47_r:checked ~ .pixel-body .cell-47 { background: var(--pix-r); }
+#px47_g:checked ~ .pixel-body .cell-47 { background: var(--pix-g); }
+#px47_b:checked ~ .pixel-body .cell-47 { background: var(--pix-b); }
+#px47_k:checked ~ .pixel-body .cell-47 { background: var(--pix-k); }
+#px48_r:checked ~ .pixel-body .cell-48 { background: var(--pix-r); }
+#px48_g:checked ~ .pixel-body .cell-48 { background: var(--pix-g); }
+#px48_b:checked ~ .pixel-body .cell-48 { background: var(--pix-b); }
+#px48_k:checked ~ .pixel-body .cell-48 { background: var(--pix-k); }
+#px49_r:checked ~ .pixel-body .cell-49 { background: var(--pix-r); }
+#px49_g:checked ~ .pixel-body .cell-49 { background: var(--pix-g); }
+#px49_b:checked ~ .pixel-body .cell-49 { background: var(--pix-b); }
+#px49_k:checked ~ .pixel-body .cell-49 { background: var(--pix-k); }
+#px50_r:checked ~ .pixel-body .cell-50 { background: var(--pix-r); }
+#px50_g:checked ~ .pixel-body .cell-50 { background: var(--pix-g); }
+#px50_b:checked ~ .pixel-body .cell-50 { background: var(--pix-b); }
+#px50_k:checked ~ .pixel-body .cell-50 { background: var(--pix-k); }
+#px51_r:checked ~ .pixel-body .cell-51 { background: var(--pix-r); }
+#px51_g:checked ~ .pixel-body .cell-51 { background: var(--pix-g); }
+#px51_b:checked ~ .pixel-body .cell-51 { background: var(--pix-b); }
+#px51_k:checked ~ .pixel-body .cell-51 { background: var(--pix-k); }
+#px52_r:checked ~ .pixel-body .cell-52 { background: var(--pix-r); }
+#px52_g:checked ~ .pixel-body .cell-52 { background: var(--pix-g); }
+#px52_b:checked ~ .pixel-body .cell-52 { background: var(--pix-b); }
+#px52_k:checked ~ .pixel-body .cell-52 { background: var(--pix-k); }
+#px53_r:checked ~ .pixel-body .cell-53 { background: var(--pix-r); }
+#px53_g:checked ~ .pixel-body .cell-53 { background: var(--pix-g); }
+#px53_b:checked ~ .pixel-body .cell-53 { background: var(--pix-b); }
+#px53_k:checked ~ .pixel-body .cell-53 { background: var(--pix-k); }
+#px54_r:checked ~ .pixel-body .cell-54 { background: var(--pix-r); }
+#px54_g:checked ~ .pixel-body .cell-54 { background: var(--pix-g); }
+#px54_b:checked ~ .pixel-body .cell-54 { background: var(--pix-b); }
+#px54_k:checked ~ .pixel-body .cell-54 { background: var(--pix-k); }
+#px55_r:checked ~ .pixel-body .cell-55 { background: var(--pix-r); }
+#px55_g:checked ~ .pixel-body .cell-55 { background: var(--pix-g); }
+#px55_b:checked ~ .pixel-body .cell-55 { background: var(--pix-b); }
+#px55_k:checked ~ .pixel-body .cell-55 { background: var(--pix-k); }
+#px56_r:checked ~ .pixel-body .cell-56 { background: var(--pix-r); }
+#px56_g:checked ~ .pixel-body .cell-56 { background: var(--pix-g); }
+#px56_b:checked ~ .pixel-body .cell-56 { background: var(--pix-b); }
+#px56_k:checked ~ .pixel-body .cell-56 { background: var(--pix-k); }
+#px57_r:checked ~ .pixel-body .cell-57 { background: var(--pix-r); }
+#px57_g:checked ~ .pixel-body .cell-57 { background: var(--pix-g); }
+#px57_b:checked ~ .pixel-body .cell-57 { background: var(--pix-b); }
+#px57_k:checked ~ .pixel-body .cell-57 { background: var(--pix-k); }
+#px58_r:checked ~ .pixel-body .cell-58 { background: var(--pix-r); }
+#px58_g:checked ~ .pixel-body .cell-58 { background: var(--pix-g); }
+#px58_b:checked ~ .pixel-body .cell-58 { background: var(--pix-b); }
+#px58_k:checked ~ .pixel-body .cell-58 { background: var(--pix-k); }
+#px59_r:checked ~ .pixel-body .cell-59 { background: var(--pix-r); }
+#px59_g:checked ~ .pixel-body .cell-59 { background: var(--pix-g); }
+#px59_b:checked ~ .pixel-body .cell-59 { background: var(--pix-b); }
+#px59_k:checked ~ .pixel-body .cell-59 { background: var(--pix-k); }
+#px60_r:checked ~ .pixel-body .cell-60 { background: var(--pix-r); }
+#px60_g:checked ~ .pixel-body .cell-60 { background: var(--pix-g); }
+#px60_b:checked ~ .pixel-body .cell-60 { background: var(--pix-b); }
+#px60_k:checked ~ .pixel-body .cell-60 { background: var(--pix-k); }
+#px61_r:checked ~ .pixel-body .cell-61 { background: var(--pix-r); }
+#px61_g:checked ~ .pixel-body .cell-61 { background: var(--pix-g); }
+#px61_b:checked ~ .pixel-body .cell-61 { background: var(--pix-b); }
+#px61_k:checked ~ .pixel-body .cell-61 { background: var(--pix-k); }
+#px62_r:checked ~ .pixel-body .cell-62 { background: var(--pix-r); }
+#px62_g:checked ~ .pixel-body .cell-62 { background: var(--pix-g); }
+#px62_b:checked ~ .pixel-body .cell-62 { background: var(--pix-b); }
+#px62_k:checked ~ .pixel-body .cell-62 { background: var(--pix-k); }
+#px63_r:checked ~ .pixel-body .cell-63 { background: var(--pix-r); }
+#px63_g:checked ~ .pixel-body .cell-63 { background: var(--pix-g); }
+#px63_b:checked ~ .pixel-body .cell-63 { background: var(--pix-b); }
+#px63_k:checked ~ .pixel-body .cell-63 { background: var(--pix-k); }
+/* ===== 9 — Focus-visible: destaca célula quando radio recebe foco via teclado ===== */
+
+#px0_r:focus-visible ~ .pixel-body .cell-0,
+#px0_g:focus-visible ~ .pixel-body .cell-0,
+#px0_b:focus-visible ~ .pixel-body .cell-0,
+#px0_k:focus-visible ~ .pixel-body .cell-0 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px1_r:focus-visible ~ .pixel-body .cell-1,
+#px1_g:focus-visible ~ .pixel-body .cell-1,
+#px1_b:focus-visible ~ .pixel-body .cell-1,
+#px1_k:focus-visible ~ .pixel-body .cell-1 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px2_r:focus-visible ~ .pixel-body .cell-2,
+#px2_g:focus-visible ~ .pixel-body .cell-2,
+#px2_b:focus-visible ~ .pixel-body .cell-2,
+#px2_k:focus-visible ~ .pixel-body .cell-2 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px3_r:focus-visible ~ .pixel-body .cell-3,
+#px3_g:focus-visible ~ .pixel-body .cell-3,
+#px3_b:focus-visible ~ .pixel-body .cell-3,
+#px3_k:focus-visible ~ .pixel-body .cell-3 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px4_r:focus-visible ~ .pixel-body .cell-4,
+#px4_g:focus-visible ~ .pixel-body .cell-4,
+#px4_b:focus-visible ~ .pixel-body .cell-4,
+#px4_k:focus-visible ~ .pixel-body .cell-4 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px5_r:focus-visible ~ .pixel-body .cell-5,
+#px5_g:focus-visible ~ .pixel-body .cell-5,
+#px5_b:focus-visible ~ .pixel-body .cell-5,
+#px5_k:focus-visible ~ .pixel-body .cell-5 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px6_r:focus-visible ~ .pixel-body .cell-6,
+#px6_g:focus-visible ~ .pixel-body .cell-6,
+#px6_b:focus-visible ~ .pixel-body .cell-6,
+#px6_k:focus-visible ~ .pixel-body .cell-6 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px7_r:focus-visible ~ .pixel-body .cell-7,
+#px7_g:focus-visible ~ .pixel-body .cell-7,
+#px7_b:focus-visible ~ .pixel-body .cell-7,
+#px7_k:focus-visible ~ .pixel-body .cell-7 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px8_r:focus-visible ~ .pixel-body .cell-8,
+#px8_g:focus-visible ~ .pixel-body .cell-8,
+#px8_b:focus-visible ~ .pixel-body .cell-8,
+#px8_k:focus-visible ~ .pixel-body .cell-8 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px9_r:focus-visible ~ .pixel-body .cell-9,
+#px9_g:focus-visible ~ .pixel-body .cell-9,
+#px9_b:focus-visible ~ .pixel-body .cell-9,
+#px9_k:focus-visible ~ .pixel-body .cell-9 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px10_r:focus-visible ~ .pixel-body .cell-10,
+#px10_g:focus-visible ~ .pixel-body .cell-10,
+#px10_b:focus-visible ~ .pixel-body .cell-10,
+#px10_k:focus-visible ~ .pixel-body .cell-10 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px11_r:focus-visible ~ .pixel-body .cell-11,
+#px11_g:focus-visible ~ .pixel-body .cell-11,
+#px11_b:focus-visible ~ .pixel-body .cell-11,
+#px11_k:focus-visible ~ .pixel-body .cell-11 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px12_r:focus-visible ~ .pixel-body .cell-12,
+#px12_g:focus-visible ~ .pixel-body .cell-12,
+#px12_b:focus-visible ~ .pixel-body .cell-12,
+#px12_k:focus-visible ~ .pixel-body .cell-12 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px13_r:focus-visible ~ .pixel-body .cell-13,
+#px13_g:focus-visible ~ .pixel-body .cell-13,
+#px13_b:focus-visible ~ .pixel-body .cell-13,
+#px13_k:focus-visible ~ .pixel-body .cell-13 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px14_r:focus-visible ~ .pixel-body .cell-14,
+#px14_g:focus-visible ~ .pixel-body .cell-14,
+#px14_b:focus-visible ~ .pixel-body .cell-14,
+#px14_k:focus-visible ~ .pixel-body .cell-14 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px15_r:focus-visible ~ .pixel-body .cell-15,
+#px15_g:focus-visible ~ .pixel-body .cell-15,
+#px15_b:focus-visible ~ .pixel-body .cell-15,
+#px15_k:focus-visible ~ .pixel-body .cell-15 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px16_r:focus-visible ~ .pixel-body .cell-16,
+#px16_g:focus-visible ~ .pixel-body .cell-16,
+#px16_b:focus-visible ~ .pixel-body .cell-16,
+#px16_k:focus-visible ~ .pixel-body .cell-16 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px17_r:focus-visible ~ .pixel-body .cell-17,
+#px17_g:focus-visible ~ .pixel-body .cell-17,
+#px17_b:focus-visible ~ .pixel-body .cell-17,
+#px17_k:focus-visible ~ .pixel-body .cell-17 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px18_r:focus-visible ~ .pixel-body .cell-18,
+#px18_g:focus-visible ~ .pixel-body .cell-18,
+#px18_b:focus-visible ~ .pixel-body .cell-18,
+#px18_k:focus-visible ~ .pixel-body .cell-18 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px19_r:focus-visible ~ .pixel-body .cell-19,
+#px19_g:focus-visible ~ .pixel-body .cell-19,
+#px19_b:focus-visible ~ .pixel-body .cell-19,
+#px19_k:focus-visible ~ .pixel-body .cell-19 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px20_r:focus-visible ~ .pixel-body .cell-20,
+#px20_g:focus-visible ~ .pixel-body .cell-20,
+#px20_b:focus-visible ~ .pixel-body .cell-20,
+#px20_k:focus-visible ~ .pixel-body .cell-20 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px21_r:focus-visible ~ .pixel-body .cell-21,
+#px21_g:focus-visible ~ .pixel-body .cell-21,
+#px21_b:focus-visible ~ .pixel-body .cell-21,
+#px21_k:focus-visible ~ .pixel-body .cell-21 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px22_r:focus-visible ~ .pixel-body .cell-22,
+#px22_g:focus-visible ~ .pixel-body .cell-22,
+#px22_b:focus-visible ~ .pixel-body .cell-22,
+#px22_k:focus-visible ~ .pixel-body .cell-22 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px23_r:focus-visible ~ .pixel-body .cell-23,
+#px23_g:focus-visible ~ .pixel-body .cell-23,
+#px23_b:focus-visible ~ .pixel-body .cell-23,
+#px23_k:focus-visible ~ .pixel-body .cell-23 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px24_r:focus-visible ~ .pixel-body .cell-24,
+#px24_g:focus-visible ~ .pixel-body .cell-24,
+#px24_b:focus-visible ~ .pixel-body .cell-24,
+#px24_k:focus-visible ~ .pixel-body .cell-24 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px25_r:focus-visible ~ .pixel-body .cell-25,
+#px25_g:focus-visible ~ .pixel-body .cell-25,
+#px25_b:focus-visible ~ .pixel-body .cell-25,
+#px25_k:focus-visible ~ .pixel-body .cell-25 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px26_r:focus-visible ~ .pixel-body .cell-26,
+#px26_g:focus-visible ~ .pixel-body .cell-26,
+#px26_b:focus-visible ~ .pixel-body .cell-26,
+#px26_k:focus-visible ~ .pixel-body .cell-26 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px27_r:focus-visible ~ .pixel-body .cell-27,
+#px27_g:focus-visible ~ .pixel-body .cell-27,
+#px27_b:focus-visible ~ .pixel-body .cell-27,
+#px27_k:focus-visible ~ .pixel-body .cell-27 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px28_r:focus-visible ~ .pixel-body .cell-28,
+#px28_g:focus-visible ~ .pixel-body .cell-28,
+#px28_b:focus-visible ~ .pixel-body .cell-28,
+#px28_k:focus-visible ~ .pixel-body .cell-28 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px29_r:focus-visible ~ .pixel-body .cell-29,
+#px29_g:focus-visible ~ .pixel-body .cell-29,
+#px29_b:focus-visible ~ .pixel-body .cell-29,
+#px29_k:focus-visible ~ .pixel-body .cell-29 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px30_r:focus-visible ~ .pixel-body .cell-30,
+#px30_g:focus-visible ~ .pixel-body .cell-30,
+#px30_b:focus-visible ~ .pixel-body .cell-30,
+#px30_k:focus-visible ~ .pixel-body .cell-30 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px31_r:focus-visible ~ .pixel-body .cell-31,
+#px31_g:focus-visible ~ .pixel-body .cell-31,
+#px31_b:focus-visible ~ .pixel-body .cell-31,
+#px31_k:focus-visible ~ .pixel-body .cell-31 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px32_r:focus-visible ~ .pixel-body .cell-32,
+#px32_g:focus-visible ~ .pixel-body .cell-32,
+#px32_b:focus-visible ~ .pixel-body .cell-32,
+#px32_k:focus-visible ~ .pixel-body .cell-32 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px33_r:focus-visible ~ .pixel-body .cell-33,
+#px33_g:focus-visible ~ .pixel-body .cell-33,
+#px33_b:focus-visible ~ .pixel-body .cell-33,
+#px33_k:focus-visible ~ .pixel-body .cell-33 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px34_r:focus-visible ~ .pixel-body .cell-34,
+#px34_g:focus-visible ~ .pixel-body .cell-34,
+#px34_b:focus-visible ~ .pixel-body .cell-34,
+#px34_k:focus-visible ~ .pixel-body .cell-34 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px35_r:focus-visible ~ .pixel-body .cell-35,
+#px35_g:focus-visible ~ .pixel-body .cell-35,
+#px35_b:focus-visible ~ .pixel-body .cell-35,
+#px35_k:focus-visible ~ .pixel-body .cell-35 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px36_r:focus-visible ~ .pixel-body .cell-36,
+#px36_g:focus-visible ~ .pixel-body .cell-36,
+#px36_b:focus-visible ~ .pixel-body .cell-36,
+#px36_k:focus-visible ~ .pixel-body .cell-36 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px37_r:focus-visible ~ .pixel-body .cell-37,
+#px37_g:focus-visible ~ .pixel-body .cell-37,
+#px37_b:focus-visible ~ .pixel-body .cell-37,
+#px37_k:focus-visible ~ .pixel-body .cell-37 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px38_r:focus-visible ~ .pixel-body .cell-38,
+#px38_g:focus-visible ~ .pixel-body .cell-38,
+#px38_b:focus-visible ~ .pixel-body .cell-38,
+#px38_k:focus-visible ~ .pixel-body .cell-38 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px39_r:focus-visible ~ .pixel-body .cell-39,
+#px39_g:focus-visible ~ .pixel-body .cell-39,
+#px39_b:focus-visible ~ .pixel-body .cell-39,
+#px39_k:focus-visible ~ .pixel-body .cell-39 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px40_r:focus-visible ~ .pixel-body .cell-40,
+#px40_g:focus-visible ~ .pixel-body .cell-40,
+#px40_b:focus-visible ~ .pixel-body .cell-40,
+#px40_k:focus-visible ~ .pixel-body .cell-40 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px41_r:focus-visible ~ .pixel-body .cell-41,
+#px41_g:focus-visible ~ .pixel-body .cell-41,
+#px41_b:focus-visible ~ .pixel-body .cell-41,
+#px41_k:focus-visible ~ .pixel-body .cell-41 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px42_r:focus-visible ~ .pixel-body .cell-42,
+#px42_g:focus-visible ~ .pixel-body .cell-42,
+#px42_b:focus-visible ~ .pixel-body .cell-42,
+#px42_k:focus-visible ~ .pixel-body .cell-42 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px43_r:focus-visible ~ .pixel-body .cell-43,
+#px43_g:focus-visible ~ .pixel-body .cell-43,
+#px43_b:focus-visible ~ .pixel-body .cell-43,
+#px43_k:focus-visible ~ .pixel-body .cell-43 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px44_r:focus-visible ~ .pixel-body .cell-44,
+#px44_g:focus-visible ~ .pixel-body .cell-44,
+#px44_b:focus-visible ~ .pixel-body .cell-44,
+#px44_k:focus-visible ~ .pixel-body .cell-44 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px45_r:focus-visible ~ .pixel-body .cell-45,
+#px45_g:focus-visible ~ .pixel-body .cell-45,
+#px45_b:focus-visible ~ .pixel-body .cell-45,
+#px45_k:focus-visible ~ .pixel-body .cell-45 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px46_r:focus-visible ~ .pixel-body .cell-46,
+#px46_g:focus-visible ~ .pixel-body .cell-46,
+#px46_b:focus-visible ~ .pixel-body .cell-46,
+#px46_k:focus-visible ~ .pixel-body .cell-46 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px47_r:focus-visible ~ .pixel-body .cell-47,
+#px47_g:focus-visible ~ .pixel-body .cell-47,
+#px47_b:focus-visible ~ .pixel-body .cell-47,
+#px47_k:focus-visible ~ .pixel-body .cell-47 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px48_r:focus-visible ~ .pixel-body .cell-48,
+#px48_g:focus-visible ~ .pixel-body .cell-48,
+#px48_b:focus-visible ~ .pixel-body .cell-48,
+#px48_k:focus-visible ~ .pixel-body .cell-48 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px49_r:focus-visible ~ .pixel-body .cell-49,
+#px49_g:focus-visible ~ .pixel-body .cell-49,
+#px49_b:focus-visible ~ .pixel-body .cell-49,
+#px49_k:focus-visible ~ .pixel-body .cell-49 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px50_r:focus-visible ~ .pixel-body .cell-50,
+#px50_g:focus-visible ~ .pixel-body .cell-50,
+#px50_b:focus-visible ~ .pixel-body .cell-50,
+#px50_k:focus-visible ~ .pixel-body .cell-50 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px51_r:focus-visible ~ .pixel-body .cell-51,
+#px51_g:focus-visible ~ .pixel-body .cell-51,
+#px51_b:focus-visible ~ .pixel-body .cell-51,
+#px51_k:focus-visible ~ .pixel-body .cell-51 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px52_r:focus-visible ~ .pixel-body .cell-52,
+#px52_g:focus-visible ~ .pixel-body .cell-52,
+#px52_b:focus-visible ~ .pixel-body .cell-52,
+#px52_k:focus-visible ~ .pixel-body .cell-52 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px53_r:focus-visible ~ .pixel-body .cell-53,
+#px53_g:focus-visible ~ .pixel-body .cell-53,
+#px53_b:focus-visible ~ .pixel-body .cell-53,
+#px53_k:focus-visible ~ .pixel-body .cell-53 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px54_r:focus-visible ~ .pixel-body .cell-54,
+#px54_g:focus-visible ~ .pixel-body .cell-54,
+#px54_b:focus-visible ~ .pixel-body .cell-54,
+#px54_k:focus-visible ~ .pixel-body .cell-54 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px55_r:focus-visible ~ .pixel-body .cell-55,
+#px55_g:focus-visible ~ .pixel-body .cell-55,
+#px55_b:focus-visible ~ .pixel-body .cell-55,
+#px55_k:focus-visible ~ .pixel-body .cell-55 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px56_r:focus-visible ~ .pixel-body .cell-56,
+#px56_g:focus-visible ~ .pixel-body .cell-56,
+#px56_b:focus-visible ~ .pixel-body .cell-56,
+#px56_k:focus-visible ~ .pixel-body .cell-56 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px57_r:focus-visible ~ .pixel-body .cell-57,
+#px57_g:focus-visible ~ .pixel-body .cell-57,
+#px57_b:focus-visible ~ .pixel-body .cell-57,
+#px57_k:focus-visible ~ .pixel-body .cell-57 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px58_r:focus-visible ~ .pixel-body .cell-58,
+#px58_g:focus-visible ~ .pixel-body .cell-58,
+#px58_b:focus-visible ~ .pixel-body .cell-58,
+#px58_k:focus-visible ~ .pixel-body .cell-58 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px59_r:focus-visible ~ .pixel-body .cell-59,
+#px59_g:focus-visible ~ .pixel-body .cell-59,
+#px59_b:focus-visible ~ .pixel-body .cell-59,
+#px59_k:focus-visible ~ .pixel-body .cell-59 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px60_r:focus-visible ~ .pixel-body .cell-60,
+#px60_g:focus-visible ~ .pixel-body .cell-60,
+#px60_b:focus-visible ~ .pixel-body .cell-60,
+#px60_k:focus-visible ~ .pixel-body .cell-60 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px61_r:focus-visible ~ .pixel-body .cell-61,
+#px61_g:focus-visible ~ .pixel-body .cell-61,
+#px61_b:focus-visible ~ .pixel-body .cell-61,
+#px61_k:focus-visible ~ .pixel-body .cell-61 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px62_r:focus-visible ~ .pixel-body .cell-62,
+#px62_g:focus-visible ~ .pixel-body .cell-62,
+#px62_b:focus-visible ~ .pixel-body .cell-62,
+#px62_k:focus-visible ~ .pixel-body .cell-62 { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+#px63_r:focus-visible ~ .pixel-body .cell-63,
+#px63_g:focus-visible ~ .pixel-body .cell-63,
+#px63_b:focus-visible ~ .pixel-body .cell-63,
+#px63_k:focus-visible ~ .pixel-body .cell-63 { outline: 2px solid var(--accent); outline-offset: 1px; }
+

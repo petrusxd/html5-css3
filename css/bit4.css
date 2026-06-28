@@ -1,0 +1,136 @@
+/* ============================================================
+   BIT-4 — CPU de 4 bits. Layout, FSM do botão ▶ e tema.
+   A ROM de trace vive em css/bit4-trace.css.
+   ============================================================ */
+
+.bit4-form { margin: 0; }
+.bit4 {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3xl);
+  padding: 1.4rem;
+  box-shadow: var(--elev-card);
+  max-width: 480px;
+  margin: 0 auto;
+  font-family: var(--mono);
+}
+
+.bit4__regs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+.reg {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: .9rem;
+  text-align: center;
+}
+.reg__label { font-size: var(--text-xs); color: var(--txt-dim); letter-spacing: .1em; }
+.reg__val   {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  color: var(--accent);
+  margin-top: var(--space-3xs);
+  min-height: 1.8rem;
+}
+/* default "0" sobrescrito pela ROM de trace (especificidade maior) */
+.reg-pc::after, .reg-r0::after { content: "0"; }
+
+/* --- flag HALT (oculta por default; ROM de trace ativa via opacity) --- */
+.halt-flag {
+  display: inline-block;
+  margin-left: var(--space-xs);
+  padding: .12rem var(--space-xs);
+  border-radius: var(--r-xs);
+  background: var(--danger);
+  color: var(--on-bright);
+  font-weight: 700;
+  font-size: .7rem;
+  letter-spacing: .1em;
+  opacity: 0;
+  transition: opacity var(--dur-base);
+}
+
+.bit4__prog {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--text-base);
+  line-height: 1.8;
+  margin-bottom: var(--space-md);
+}
+.bit4__prog ol {
+  list-style: none;
+  counter-reset: addr;
+  margin: 0;
+  padding: 0;
+}
+.bit4__prog li {
+  counter-increment: addr;
+  color: var(--txt-dim);
+  transition: color var(--dur-quick);
+}
+.bit4__prog li::before {
+  content: counter(addr, decimal-leading-zero) ":  ";
+  color: var(--accent2);
+  font-size: var(--text-sm);
+}
+.c-cm { color: var(--txt-dim); font-size: var(--text-sm); }
+
+.bit4__ctrl {
+  display: flex;
+  gap: .6rem;
+}
+.btn-step, .btn-reset {
+  flex: 1;
+  position: relative;
+  font-family: var(--mono);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  text-align: center;
+  padding: .9rem 0;
+  border-radius: var(--r-xl);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  color: var(--txt);
+  user-select: none;
+  cursor: pointer;
+  transition: border-color var(--dur-quick), box-shadow var(--dur-quick), opacity var(--dur-base), transform var(--dur-tap);
+}
+.btn-step:hover  { border-color: var(--accent); box-shadow: var(--elev-soft); }
+.btn-step:active { transform: scale(.97); }
+/* HALT atingido: btn-step não tem efeito visível na execução — dim para sinalizar. */
+.bit4-form:has(#step_9:checked) .btn-step { opacity: .35; cursor: not-allowed; }
+.btn-reset { color: var(--txt-dim); cursor: pointer; }
+.btn-reset:hover  { color: var(--danger); border-color: var(--danger); }
+.btn-reset:active { transform: scale(.97); }
+.reg__val { transition: color var(--dur-quick); }
+
+/* --- labels sobrepostos do botão ▶ (FSM identica à calculadora) --- */
+.lbl-step {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-xl);
+  cursor: pointer;
+  pointer-events: none;   /* todos inertes; FSM ativa exatamente um */
+}
+
+/* FSM do botão ▶: step_k ativo enquanto step_{k-1} marcado e step_k não.
+   Quando HALT, o último step alcançável (9) não tem successor → FSM para
+   naturalmente (nenhum label ativo apos step_9 marcado). */
+.bit4-form:not(:has([name="step"]:checked))              .lbl-step-0 { pointer-events: auto; }
+.bit4-form:has(#step_0:checked):not(:has(#step_1:checked)) .lbl-step-1 { pointer-events: auto; }
+.bit4-form:has(#step_1:checked):not(:has(#step_2:checked)) .lbl-step-2 { pointer-events: auto; }
+.bit4-form:has(#step_2:checked):not(:has(#step_3:checked)) .lbl-step-3 { pointer-events: auto; }
+.bit4-form:has(#step_3:checked):not(:has(#step_4:checked)) .lbl-step-4 { pointer-events: auto; }
+.bit4-form:has(#step_4:checked):not(:has(#step_5:checked)) .lbl-step-5 { pointer-events: auto; }
+.bit4-form:has(#step_5:checked):not(:has(#step_6:checked)) .lbl-step-6 { pointer-events: auto; }
+.bit4-form:has(#step_6:checked):not(:has(#step_7:checked)) .lbl-step-7 { pointer-events: auto; }
+.bit4-form:has(#step_7:checked):not(:has(#step_8:checked)) .lbl-step-8 { pointer-events: auto; }
+.bit4-form:has(#step_8:checked):not(:has(#step_9:checked)) .lbl-step-9 { pointer-events: auto; }
+/* step_9 = último: nenhum lbl ativo → botão ▶ inerte (CPU parada) */
+
