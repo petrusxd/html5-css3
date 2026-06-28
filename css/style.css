@@ -1033,6 +1033,8 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 var(--space-lg); }
 }
 .navtab:hover { color: var(--txt); border-color: var(--line); }
 
+.navtab--ext { text-decoration: none; }
+
 #nav-demos:checked    ~ .topnav label[for="nav-demos"],
 #nav-projects:checked ~ .topnav label[for="nav-projects"] {
   color: var(--bg);
