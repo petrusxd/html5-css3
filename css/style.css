@@ -180,7 +180,8 @@ code {
    destacamos o rótulo visível associado. Foco das teclas de dígito é
    definido em calc-table.css (uma regra por slot×valor). */
 #nav-demos:focus-visible     ~ .topnav label[for="nav-demos"],
-#nav-projects:focus-visible  ~ .topnav label[for="nav-projects"] {
+#nav-projects:focus-visible  ~ .topnav .navtab--switch,
+#nav-projects:focus-visible  ~ .topnav .navtab--reset {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -1035,8 +1036,16 @@ main { max-width: 1080px; margin: 0 auto; padding: 0 var(--space-lg); }
 
 .navtab--ext { text-decoration: none; }
 
+/* Tab "Aplicações" tem dois labels stackados no mesmo wrapper: --switch aponta
+   pro radio da aba (vai de A Prova → Aplicações grid); --reset aponta pro
+   proj-none (volta de qualquer projeto pra grade). Trocamos qual está visível
+   por #nav-projects:checked — uma label resolve cada lado da transição sem JS. */
+.navtab--reset { display: none; }
+#nav-projects:checked ~ .topnav .navtab--switch { display: none; }
+#nav-projects:checked ~ .topnav .navtab--reset { display: inline-flex; align-items: center; }
+
 #nav-demos:checked    ~ .topnav label[for="nav-demos"],
-#nav-projects:checked ~ .topnav label[for="nav-projects"] {
+#nav-projects:checked ~ .topnav .navtab--reset {
   color: var(--bg);
   background: linear-gradient(100deg, var(--accent), var(--accent2));
   border-color: transparent;
